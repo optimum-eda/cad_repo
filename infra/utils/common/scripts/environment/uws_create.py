@@ -5,34 +5,6 @@
 #                                                                     |
 # Description: this script creates new user work area under the        |
 #  directory specified in the -wa parameter.                          |
-#  It will create 3 clone 3 git areas:                                |
-#       ot:       from $GIT_OT_PROJECT_ROOT                           |
-#       foundrty: from $GIT_FOUNDRY_PROJECT_ROOT                      |
-#       nti_ot:   from $GIT_TOP_PROJECT_ROOT                       |
-#       cad_rep:  from $GIT_CAD_REPO                                  |
-#       wa_shas:  from $GIT_WA_SHAS_PROJECT_ROOT                      |
-#       verification:  from $GIT_VERIFICATION_PROJECT_ROOT            |
-#       design:   from $GIT_DESIGN_PROJECT_ROOT                       |
-#                                                                     |
-#  parameters:                                                        |
-#       -wa <work_area_name>                                          |
-#     [-ot <sha/tag_name/latest>]                                   |
-#     [-foundry <sha/tag_name/latest>]                              |
-#     [-dv  <sha/tag_name/latest>]                                  |
-#      [-des <sha/tag_name/latest>]                                  |
-#     [-top <sha/tag_name/latest>]                                  |
-#     [-cad <sha/tag_name/latest>]                                  |
-#       [-freeze <sha/tag_name/latest>] this checkout the sha of file | 
-#                  sha_list_to_sync_wa ,default is latest_stable tag  |
-#       [-latest] this option cannot comes with -freeze option        |  
-#                 this option overwrite on all sha's values that comes|
-#                 from file sha_list_to_sync_wa with value 'latest'   |
-#                 that is the origin/master latest sha                | 
-#                                                                     |
-#   The deafult is clone latest origin/master  of all three           |
-#   repositories to user work area with name -wa <workarea_name>      |
-#   and check them out  to the SHA specified at the file              |
-#   sha_list_to_sync_wa                                               |
 #                                                                     |
 #                                                                     |
 # Written by: Ruby Cherry EDA  Ltd                                    |
@@ -54,7 +26,7 @@ now = datetime.now()
 dateTime = now.strftime("%d-%m-%Y_%H%M%S")
 
 #--------- check setup_proj alreay ran -------
-flow_utils.fn_check_setup_proj_ran()
+#flow_utils.fn_check_setup_proj_ran()
 
 #----------- create log file -----------------
 #UWA_PROJECT_ROOT = os.getenv('UWA_PROJECT_ROOT')
@@ -62,33 +34,24 @@ UWA_PROJECT_ROOT = os.getcwd()
 global_log_file = 'logs/uws_create_logfile_' + dateTime + '.log'
 global_command_log_file = 'logs/uws_commands.log'
 
-#-------------- parse args -------- 
+#-------------- parse args --------
 parser = argparse.ArgumentParser(description="Description: Create GIT user work area <work_area_name>")
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('-wa',default='',help = "work area name",required=True)
 parser.add_argument('-debug',action='store_true')
-parser.add_argument('-freeze',default='',help = "version of the sha_list_to_sync_wa file , default is 'latest_stable' tag ")
-parser.add_argument('-latest',action='store_true',help = "this option cannot comes with -freeze option ,this option overwrite on all sha's values that comes from file sha_list_to_sync_wa with value 'latest' that is the origin/master latest sha")
-parser.add_argument('-ot',default='',help = "checkout tag or SHA for the opentitan area")
-parser.add_argument('-foundry',default='',help = "checkout tag or SHA for the foundry area")
-parser.add_argument('-dv',default='',help = "checkout tag or SHA for the nuvoton verification area")
-parser.add_argument('-des',default='',help = "checkout tag or SHA for the nuvoton design area")
-parser.add_argument('-top',default='',help = "checkout tag or SHA for the nuvoton top area")
-parser.add_argument('-cad',default='',help = "checkout tag or SHA for cad area")
-parser.add_argument('-top_res',default='',help = "included results folders under top area")
+requiredNamed.add_argument('-b',default='',help = "block name",required=True)
+parser.add_argument('-ver',default='',help = "block version")
 args = parser.parse_args()
 
 
 #-------- global var ---------------
-script_version = "V000005.0"
+script_version = "V000001.0"
 home_dir = flow_utils.concat_workdir_path(os.getcwd() ,  args.wa)
 flow_utils.home_dir = home_dir
-top_tools_result_ymal_reader="/tanap1/proj_cad_cad6/Cad.softw/git_infra/cad_repo/infra/utils/common/scripts/top_tools_result_ymal_reader.py"
-
 
 
 #=============================================
-#   
+#
 #=============================================
 #------------------------------------
 # proc        : fn_check_args
@@ -108,29 +71,14 @@ def fn_check_args():
         flow_utils.critical('You must give work area name , -wa <work_area_name>')
         usage()
 
-    if (args.latest and args.freeze != ''):
-        flow_utils.critical('The option -latest cannot come together with -freeze option !!!')
+    if (args.b == ''):
+        flow_utils.critical('Tou must give work area name , -b <block_name>')
         usage()
 
-    if not("GIT_OT_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_OT_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GITLAB_OT_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GITLAB_OT_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GIT_FOUNDRY_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_FOUNDRY_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GITLAB_FOUNDRY_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GITLAB_FOUNDRY_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GIT_TOP_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_TOP_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
+    if not("GIT_PROJECT_ROOT" in os.environ):
+        flow_utils.error("envirenment varable 'GIT_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
     if not("GIT_CAD_REPO" in os.environ):
         flow_utils.error("envirenment varable 'GIT_CAD_REPO' not define !!! \n Please run setup_proj command")
-    if not("GIT_WA_SHAS_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_WA_SHAS_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GIT_DESIGN_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_DESIGN_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-    if not("GIT_VERIFICATION_PROJECT_ROOT" in os.environ):
-        flow_utils.error("envirenment varable 'GIT_VERIFICATION_PROJECT_ROOT' not define !!! \n Please run setup_proj command")
-
 
     flow_utils.debug("Finish fn_check_args")
 
@@ -141,7 +89,7 @@ def fn_check_args():
 #------------------------------------
 def fn_ignore_pull_merge ():
 
-    cmd = 'echo "* merge=verify" > .git/info/attributes'	
+    cmd = 'echo "* merge=verify" > .git/info/attributes'
     os.system(cmd)
     cmd = 'git config merge.verify.name "NTIL manual merge"'
     flow_utils.info("run command : " + cmd)
@@ -158,7 +106,7 @@ def fn_ignore_pull_merge ():
 #------------------------------------
 def fn_create_user_workspace ():
 
-    global filelog_name    
+    global filelog_name
     flow_utils.debug("Start fn_create_user_workspace")
 
     UWA_PROJECT_ROOT         = os.getcwd()
@@ -205,7 +153,7 @@ def fn_create_user_workspace ():
     if not(os.path.isdir(ot_folder_name)):
         flow_utils.error("Work area was not created")
 
-    # set user.otemail	
+    # set user.otemail
     os.chdir(ot_folder_name)
     cmd = 'git remote add upstream ' + GIT_OT_PROJECT_ROOT
     flow_utils.info("run command : " + cmd)
@@ -245,7 +193,7 @@ def fn_create_user_workspace ():
             flow_utils.critical("Work area was not created")
             revert_and_exit()
 
-        # set user.otemail	
+        # set user.otemail
         os.chdir(foundry_path)
         cmd = 'git remote add upstream ' + GIT_FOUNDRY_PROJECT_ROOT
         flow_utils.info("run command : " + cmd)
@@ -307,7 +255,7 @@ def fn_create_user_workspace ():
                             if folder.endswith("/"):
                                file_content += folder + "*\n"
                             else:
-                                  file_content += folder + "/*\n" 
+                                  file_content += folder + "/*\n"
 
                 file_content += "\"" #end content of file
                 #print(file_content)
@@ -322,14 +270,14 @@ def fn_create_user_workspace ():
                 flow_utils.git_cmd("git fetch --tags")
                 flow_utils.git_cmd("git pull origin " + top_branch_name)
         else:
-                os.chdir(home_dir)   
+                os.chdir(home_dir)
                 nuvoton_path = flow_utils.get_path_to("top")
                 cmd = 'git clone ' +  GIT_TOP_PROJECT_ROOT + ' ' + nuvoton_path
                 flow_utils.info("run command : " + cmd)
                 if not (flow_utils.git_cmd(cmd)):
                    revert_and_exit()
     else:
-        os.chdir(home_dir)   
+        os.chdir(home_dir)
         nuvoton_path = flow_utils.get_path_to("top")
         cmd = 'git clone ' +  GIT_TOP_PROJECT_ROOT + ' ' + nuvoton_path
         flow_utils.info("run command : " + cmd)
@@ -337,7 +285,7 @@ def fn_create_user_workspace ():
            revert_and_exit()
 
     ### check that it exists
-    os.chdir(home_dir)   
+    os.chdir(home_dir)
     if not(os.path.isdir(nuvoton_path)):
        flow_utils.critical("Work area was not created")
        revert_and_exit()
@@ -420,7 +368,7 @@ def fn_create_user_workspace ():
 # description : sync user work area
 #               to sha's that requested
 #               first from sha_list_to_sync_wa file
-#               and then overwriet with user inputs 
+#               and then overwriet with user inputs
 #               args if needed
 #------------------------------------
 def fn_checkout_to_relevant_sha():
@@ -453,7 +401,7 @@ def fn_checkout_to_relevant_sha():
     target_sha_dict = {}
     if (args.latest) :
         sha_list_to_sync_dict = flow_utils.set_all_shas_to_latest(sha_list_to_sync_wa)
-    else:    
+    else:
         sha_list_to_sync_dict = flow_utils.read_sha_set_file(sha_list_to_sync_wa)
 
     if (args.ot != ""):
@@ -461,7 +409,7 @@ def fn_checkout_to_relevant_sha():
     else:
         target_sha_dict['ot'] = sha_list_to_sync_dict['ot']
 
-    # now we need to go to each place in the directory and 
+    # now we need to go to each place in the directory and
     # update the head accordingly and write a current_sha file
 
     os.chdir(home_dir)
@@ -525,7 +473,7 @@ def fn_checkout_to_relevant_sha():
     dv_path = flow_utils.get_git_root("dv")
     os.chdir(dv_path)
     flow_utils.debug("dv_path=" + dv_path)
-            
+
     ok = flow_utils.switch_refrence("dv", target_sha_dict['dv'], calling_function="uws_create")
     if not ok:
         revert_and_exit()
@@ -586,7 +534,7 @@ def fn_checkout_to_relevant_sha():
 #------------------------------------
 def revert_and_exit():
 
-    global filelog_name    
+    global filelog_name
 
     sys.stdout.write("\033[1;31m")
     flow_utils.info("Reverting - removing work area " + args.wa)
@@ -605,25 +553,25 @@ def revert_and_exit():
 def main ():
 
     fn_check_args()
-    
+
     flow_utils.debug("Start uws_create")
-    
+
     curr_pwd = os.getcwd()
 
     #-----------------------
-    # create user work area    
-    fn_create_user_workspace()
+    # create user work area
+    #fn_create_user_workspace()
 
     #-----------------------
-    # sync to relevant sha's    
-    fn_checkout_to_relevant_sha()
+    # sync to relevant sha's
+    #fn_checkout_to_relevant_sha()
 
-    #-----------------------     
-    # store command line in logs/uws_commans.log    
+    #-----------------------
+    # store command line in logs/uws_commans.log
     local_uws_command_log_file = UWA_PROJECT_ROOT + "/" + args.wa + "/" + global_command_log_file
     flow_utils.write_command_line_to_log(sys.argv,local_uws_command_log_file)
-    #-----------------------     
-        
+    #-----------------------
+
     local_log_file = UWA_PROJECT_ROOT + "/" + args.wa + "/" + global_log_file
     if path.isfile(local_log_file):
         flow_utils.info("You can find log file under '" + local_log_file + "'")
@@ -633,8 +581,6 @@ def main ():
     flow_utils.info("| uws_create finished successfully ... |")
     flow_utils.info("+======================================+")
     flow_utils.info("")
-    flow_utils.info("** Note : for setup WA_ROOT env and tools setup run the command: ")
-    flow_utils.info("          > uws_make_env -wa " + UWA_PROJECT_ROOT + '/' + args.wa )
     flow_utils.info("")
     flow_utils.debug("Finish uws_create")
 
@@ -651,20 +597,10 @@ def usage():
     print('              work area should be created under \$UWA_PROJECT_ROOT ')
     print(' ')
     print(' options    :')
-    print('              -wa   <work_area_name>    # work area folder name ')
-    print('              -foundry   <version>      # foundry sha version  ')
-    print('              -ot        <version>      # opentitan sha version  ')
-    print('              -top       <version>      # top sha version  ')
-    print('              -des       <version>      # design sha version ')
-    print('              -dv        <version>      # verification sha version')
-    print('              -cad       <version>      # cad sha version')
-    print('              -freeze    <version>      # sha version of the file sha_list_to_sync_wa')
-    print('                                        # default is \'latest_stable\' tag ') 
-    print('              -latest                   # this option cannot comes with -freeze option ')
-    print('                                        # this option overwrite on all shas values that comes')
-    print('                                        # from file sha_list_to_sync_wa with value latest')
-    print('                                        # that is the origin/master latest sha')
-    print('              -help                     # print this usage')
+    print('              -wa   <work_area_name>       # work area folder name ')
+    print('              -b    <block_name>           # top block name ')
+    print('             [-ver  <block_version_name>  # top block version ,default is latest ]')
+    print('              -help                        # print this usage')
     print(' ')
     print(' Script version:' + script_version)
     print(' -------------------------------------------------------------------------')
