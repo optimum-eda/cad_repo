@@ -43,7 +43,7 @@ while ( $counter != $#argv )
    endif
 end
 # set project home dir
-set GIT_CAD_REPO = "/Users/aduvdevani/my_github/cad_repo"
+set GIT_CAD_REPO = "/Users/aduvdevani/opt_github/cad_repo"
 set PROJECT_INFRA_DIR = "$GIT_CAD_REPO/$project_name/$project_rev"
 #------------------------------------
 # check if project test_env required 

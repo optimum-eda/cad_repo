@@ -15,10 +15,10 @@ git config --global alias.tkdiff 'difftool --tool=tkdiff \!*'
 #               1.1) project's .cshrc files
 #            2) infra CAD scripts : $GIT_CAD_REPO/infra/
 #               2.1) project's tools/environments/scripts wrappers
-setenv GIT_CAD_REPO  "/Users/aduvdevani/my_github/cad_repo"
+setenv GIT_CAD_REPO  "/Users/aduvdevani/opt_github/cad_repo"
 setenv PATH $GIT_CAD_REPO/infra/utils/common/bin:/usr/local/bin:${PATH}
-setenv MODULESHOME /Users/aduvdevani/my_github/cad_repo/infra/tools/modules
-setenv MODULEPATH /Users/aduvdevani/my_github/cad_repo/infra/tools/modules:/etc/modulefiles
+setenv MODULESHOME $$GIT_CAD_REPO/infra/tools/modules
+setenv MODULEPATH $GIT_CAD_REPO/infra/tools/modules:/etc/modulefiles
 #
 #-------------------
 # project user's workarea 
