@@ -1,0 +1,103 @@
+#=======================================
+#
+# .aliases - project's aliases 
+#
+# created by : Ruby Cherry team
+# date       : Thu Jun 25 15:01:52 IDT 2020
+#=======================================
+git config --global alias.loga  'log --graph --oneline --decorate --all'
+git config --global alias.logna 'log --graph --oneline --decorate'
+git config --global alias.tkdiff 'difftool --tool=tkdiff \!*'
+#-------------------
+# CAD git repository $GIT_CAD_REPO
+#
+# contains : 1) project's infra data : $GIT_CAD_REPO/<project_name>/<rev>/
+#               1.1) project's .cshrc files
+#            2) infra CAD scripts : $GIT_CAD_REPO/infra/
+#               2.1) project's tools/environments/scripts wrappers
+setenv GIT_CAD_REPO  "/Users/aduvdevani/my_github/cad_repo"
+setenv PATH $GIT_CAD_REPO/infra/utils/common/bin:/usr/local/bin:${PATH}
+setenv MODULESHOME /Users/aduvdevani/my_github/cad_repo/infra/tools/modules
+setenv MODULEPATH /Users/aduvdevani/my_github/cad_repo/infra/tools/modules:/etc/modulefiles
+#
+#-------------------
+# project user's workarea 
+#
+
+# arikh 24-Mar-21 different criterion
+# arikh 21-Mar-21
+#if ( -d /tanap2/ ) then
+#
+#hostname -i | grep '^10\.192\.' >& /dev/null
+#if ( $status == 0 ) then
+#  setenv PROJECTS_DIR ~ot_sec/$USER
+#else
+#  setenv PROJECTS_DIR ~opentitan/$USER
+#endif
+
+#if (!(-d "$PROJECTS_DIR")) then
+#	mkdir -p  $PROJECTS_DIR
+#endif
+#-------------------
+#
+# setup_project alias 
+#
+#	this alias create the following:
+#	1) local user workspace under project area
+#	2) set all project environment
+#
+set setup_file = `which project_setup_dummy`
+alias setup_proj 'set s_p = `$setup_file \!*`; if ( $#s_p == 1 ) then \
+source $s_p; \
+else \
+	echo "-----------------------------------------------------"\
+	echo "Usage: setup_proj <project_name> <project_version> [-test]"\
+	echo "	options: " \
+        echo "           <project_name>     - project name to set envirenment "\
+        echo "           <project_revision> - project revision name "\
+        echo "           [-test]            - run under test environment, deafult is production area "\
+	echo ""\
+	echo "-----"\
+	echo "Note: projects that supported by setup_proj are:"\
+	echo "       -  opentitan rev_a"\
+	echo ""\
+	echo "e.g. : setup_proj opentitan rev_a"\
+	echo "----------------------------"\
+endif \
+unset s_p'
+#----------------------------------------
+set setup_wa_env = `which load_wa_env`
+alias make_wa_env 'set s_w = `$setup_wa_env \!*`; if (-f $s_w) then \
+source $s_w \
+else \
+	echo "-----------------------------------------------------"\
+	echo "Usage: make_wa_env -here | -wa <work_area_name>"\
+	echo ""\
+	echo "	description: load the envirenment variables for "\
+	echo "                     the relevant input work area name"\
+	echo "	options    : "\
+        echo "             -wa <work_area_name>     - relative path to work area folder"\
+        echo "             -here                    - determine WA by calling uws_getwa"\
+	echo ""\
+	echo "----------------------------"\
+endif \
+unset s_w'
+alias uws_make_env 'set s_w = `$setup_wa_env \!*`; if (-f $s_w) then \
+source $s_w \
+else \
+	echo "-----------------------------------------------------"\
+	echo "Usage: uws_make_env -here | -wa <work_area_name>"\
+	echo ""\
+	echo "	description: load the envirenment variables for "\
+	echo "                     the relevant input work area name"\
+	echo "	options    : "\
+        echo "             -wa <work_area_name>     - relative path to work area folder"\
+        echo "             -here                    - determine WA by calling uws_getwa"\
+	echo ""\
+	echo "----------------------------"\
+endif \
+unset s_w'
+#------------------------
+#--------- END ----------
+#------------------------
+

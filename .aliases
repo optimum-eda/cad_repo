@@ -1,0 +1,6 @@
+setenv PATH ${PATH}:/Users/aduvdevani/my_github/cad_repo/infra/utils/common/bin/
+#alias setup_proj="which project_setup_dummy" !*
+#alias setup_proj="/Users/aduvdevani/Winbond/project/infra/utils/common/bin/project_setup_dummy"
+alias setup_proj "project_setup_dummy"
+#alias setup_proj 'project_setup_dummy -p \!*; source /homes/$USER/.\!:1.git.cshrc;cd $MODULES_ROOT'
+#alias setup_proj 'project_setup_dummy  \!*; source \!:1;'
