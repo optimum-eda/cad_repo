@@ -1,0 +1,113 @@
+#!/bin/csh 
+#
+#  setup_project  
+#
+#set NAME="`basename $0`"
+set test_env = "nil"
+set local = "nil"
+set force = "nil"
+#######
+if ( ( $#argv < 2 ) || ( $#argv > 5 ))   then 
+   echo "-----------------------------------------------------"
+   echo "Usage: setup_proj <project_name> <project_version> [-local] [-force]"
+   echo "e.g. : setup_proj everest rev_a "
+   goto END_SET
+endif
+@ counter = 0
+while ( $counter != $#argv ) 
+   @ counter += 1 
+   if ( $counter == 1 ) then
+      set project_name = $1 
+   else if ( $counter == 2 ) then
+      set project_rev  = $2
+   else if ( "$argv[$counter]" == "-local" ) then
+      set local = "local"
+   else if ( "$argv[$counter]" == "-test"  ) then
+      set test_env = "test"
+   else if ( "$argv[$counter]" == "-force" ) then
+      set force = "force"
+   else
+      echo "-----------------------------------------------------"
+      echo "Usage: setup_proj <project_name> <project_version> [-local] [-force]"
+      echo "e.g. : setup_proj everest rev_a "
+      goto END_SET
+   endif
+end
+# set project home dir
+set PROJECT_HOME_DIR = "/project/$project_name/$project_rev"
+#------------------------------------
+# check if project test_env required 
+if ($test_env != "test") then
+  set PROJECT_CSHRC = "$PROJECT_HOME_DIR/.$project_name.$project_rev.cshrc" 
+else
+  set PROJECT_CSHRC = "$PROJECT_HOME_DIR/.$project_name.$project_rev.test_env.cshrc" 
+endif
+#------------------------------------
+
+if ( -d "$PROJECT_HOME_DIR" ) then
+  if ( -f "$PROJECT_CSHRC" ) then
+      if ($local == "nil" && $force == "nil" ) then 
+         ##################################
+         # check if it will  need to change files and ask if to proceed
+         foreach TableType ("scripts" "environment" "tools")
+            #echo "Info: run command :/home/galg/INFRA/utils/common/scripts/environment/table_overwrite_check.pl $project_name $project_rev $TableType"
+            if ($test_env != "test") then 
+               set noMissMatch = `/project/infra/utils/common/scripts/environment/table_overwrite_check.pl $project_name $project_rev  $TableType`
+            else 
+               set noMissMatch = `/project/infra/utils/common/test_env/scripts/environment/table_overwrite_check.pl $project_name $project_rev  $TableType`
+            endif
+            # no mismatch mean either different or not existing .
+            if ( $noMissMatch != "yes" ) then 
+               echo "File  /home/$USER/.${project_name}_$project_rev/infra/$TableType/wrapper/$TableType.wrapper.${project_name}_${project_rev}.Table"
+               echo "is about to be replaced due to differences compared with its svn version " 
+               diff  /tmp/process_proj_cshrc_tmp_phy_$USER\_$noMissMatch /tmp/process_proj_cshrc_tmp_svn_$USER\_$noMissMatch 
+               echo "\n\nIf You want to continue type yes else type no"
+               echo -n "yes/no:  "
+               set ans = $< 
+	       while ( $ans != "yes" &&  $ans != "no" )
+                  echo -n "yes/no:   "
+                  set ans = $<  
+               end 
+               if ( $ans == "no" ) then 
+                  exit 0
+               endif               
+            endif
+         end
+         ######################################################
+      endif 
+      if ($test_env != "test") then
+          if ($local == "local") then 
+             set PROJECT_CSHRC = `/project/infra/utils/common/scripts/environment/process_project_cshrc.pl -f $PROJECT_CSHRC -local`
+          else 
+             set PROJECT_CSHRC = `/project/infra/utils/common/scripts/environment/process_project_cshrc.pl -f $PROJECT_CSHRC `
+          endif
+      else # test_env
+          if ($local == "local") then 
+             set PROJECT_CSHRC = `/project/infra/utils/common/test_env/scripts/environment/process_project_cshrc.pl -f $PROJECT_CSHRC -local`
+          else
+             set PROJECT_CSHRC = `/project/infra/utils/common/test_env/scripts/environment/process_project_cshrc.pl -f $PROJECT_CSHRC ` 
+          endif
+      endif
+    set temp = ""
+    #echo $PROJECT_CSHRC
+    foreach i ( $PROJECT_CSHRC ) 
+       set temp = $i
+       #echo $temp
+    end
+    echo $temp
+    set PROJECT_CSHRC = `echo $temp`
+    echo "sourcing $PROJECT_CSHRC"
+    source $PROJECT_CSHRC
+  else
+    echo "------------" 
+    echo "Warning: cannot find project .cshrc revision file \!\!\!"  
+    echo "         no such project cshrc file : '$PROJECT_CSHRC'" 
+  endif
+else
+  echo "------------" 
+  echo "Warning: cannot find project directory : '$PROJECT_HOME_DIR' \!\!\!"  
+  echo " "  
+endif
+
+END_SET:
+

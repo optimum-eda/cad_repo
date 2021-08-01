@@ -1,0 +1,62 @@
+#!/bin/csh
+#
+#  setup_project  
+#
+#set NAME="`basename $0`"
+set test_env = "nil"
+set local = "nil"
+set force = "nil"
+#######
+if ( ( $#argv < 2 ) || ( $#argv > 5 ))   then 
+   echo "-----------------------------------------------------"
+   echo "Usage: setup_proj <project_name> <project_version> [-local] [-force]"
+   echo "e.g. : setup_proj everest rev_a "
+   goto END_SET
+endif
+@ counter = 0
+while ( $counter != $#argv ) 
+   @ counter += 1 
+   if ( $counter == 1 ) then
+      set project_name = $1 
+   else if ( $counter == 2 ) then
+      set project_rev  = $2
+   else if ( "$argv[$counter]" == "-local" ) then
+      set local = "local"
+   else if ( "$argv[$counter]" == "-test"  ) then
+      set test_env = "test"
+   else if ( "$argv[$counter]" == "-force" ) then
+      set force = "force"
+   else
+      echo "-----------------------------------------------------"
+      echo "Usage: setup_proj <project_name> <project_version> [-local] [-force]"
+      echo "e.g. : setup_proj everest rev_a "
+      goto END_SET
+   endif
+end
+# set project home dir
+set PROJECT_HOME_DIR = "/Users/aduvdevani/my_github/cad_repo/$project_name/$project_rev"
+#------------------------------------
+# check if project test_env required 
+if ($test_env != "test") then
+  set PROJECT_CSHRC = "$PROJECT_HOME_DIR/.$project_name.$project_rev.cshrc" 
+else
+  set PROJECT_CSHRC = "$PROJECT_HOME_DIR/.$project_name.$project_rev.test_env.cshrc" 
+endif
+#------------------------------------
+
+if ( -d "$PROJECT_HOME_DIR" ) then
+  if ( -f "$PROJECT_CSHRC" ) then
+    echo "sourcing $PROJECT_CSHRC"
+    source "$PROJECT_CSHRC"
+  else
+    echo "------------" 
+    echo "Warning: cannot find project .cshrc revision file \!\!\!"  
+    echo "         no such project cshrc file : '$PROJECT_CSHRC'" 
+  endif
+else
+  echo "------------" 
+  echo "Warning: cannot find project directory : '$PROJECT_HOME_DIR' \!\!\!"  
+  echo " "  
+endif
+
+END_SET:

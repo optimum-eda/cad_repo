@@ -1,0 +1,17 @@
+#!/bin/sh
+MSG="$1"
+#--------------------------------------------------------------------
+#
+# avoid all git commit commands that not comes from
+# at_git_commit wrapper
+#
+if ! grep -qE "at_git_commit:" "$MSG";then
+    #cat "$MSG"
+    echo "#########################################################"
+    echo "# Error: abort commit                                   # "
+    echo "#    git commit could be done only by 'at_git_commit'   #"
+    echo "#########################################################"
+    exit 1
+fi
+#--------------------------------------------------------------------
+

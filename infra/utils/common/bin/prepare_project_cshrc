@@ -1,0 +1,99 @@
+#!/bin/csh
+#=================================================================
+#
+#  Script : prepare_project_cshrc
+#
+#  Description : prepare project .csh file that will be under user
+#                home work area ,and also git checkout project wrappers
+#                for tools/environments and scripts  
+#
+#  Written by  : Ruby Cherry
+#  Date        : Thu Jun 25 15:06:03 IDT 2020
+#=================================================================
+set test_env = "nil"
+set tag_name = "nil"
+set local = "nil"
+set force = "nil"
+#######
+if ( ( $#argv < 1 ) || ( $#argv > 6 ))   then 
+   echo "-----------------------------------------------------"
+   echo "Usage: prepare_project_cshrc <project_cshrc> [-local] [-test]"
+   echo "e.g. : prepare_project_cshrc PROJECT_HOME_DIR/.project_name.project_rev.cshrc'"
+   goto END_SET
+endif
+@ counter = 0
+while ( $counter != $#argv ) 
+   @ counter += 1 
+  if ( $counter == 1 ) then
+      set project_cshrc = $1 
+  else if ( $counter == 2 ) then
+      set GIT_CAD_REPO = $2 
+  else if ( "$argv[$counter]" == "-local" ) then
+      set local = "local"
+  else if ( "$argv[$counter]" == "-test"  ) then
+      set test_env = "test"
+  else if ( "$argv[$counter]" == "-tag"  ) then
+      @ counter += 1 
+      set tag_name = $argv[$counter]
+  endif
+end
+set REV = `grep setenv $project_cshrc | grep " REV " | awk '{print $3}'`
+set PROJECT_NAME = `grep setenv $project_cshrc | grep " PROJECT_NAME " | awk '{print $3}'`
+set PROJECTS_DIR = `grep setenv $project_cshrc | grep " PROJECTS_DIR " | awk '{print $3}'`
+#echo "tag_name='$tag_name'"
+#--------------------------------
+# take care on projects wrappers 
+# envirenment,tools & scripts 
+#--------------------------------
+if ("$tag_name" == "nil") then
+	set CURR_PWD = `pwd`
+	cp $project_cshrc .$PROJECT_NAME.$REV.cshrc
+	set diff_res = `diff $CURR_PWD/.$PROJECT_NAME.$REV.cshrc .$PROJECT_NAME.$REV.cshrc `
+	if ( "$diff_res" != "") then
+		echo "cp $CURR_PWD/.$PROJECT_NAME.$REV.cshrc ." >>  .$PROJECT_NAME.$REV.cshrc 
+	endif
+	#---------------------------------------
+	# checkout wrappers if not -local option 
+	#---------------
+	if ($local != "local") then
+		echo "rm -fr .$PROJECT_NAME.$REV.wrappers" >>  .$PROJECT_NAME.$REV.cshrc 	
+		echo "mkdir .$PROJECT_NAME.$REV.wrappers" >>  .$PROJECT_NAME.$REV.cshrc 	
+		echo "git clone --no-checkout file://$GIT_CAD_REPO/.git .$PROJECT_NAME.$REV.wrappers" >>  .$PROJECT_NAME.$REV.cshrc 
+		echo "cd .$PROJECT_NAME.$REV.wrappers" >>  .$PROJECT_NAME.$REV.cshrc
+		echo "git checkout master -- infra/tools" >>  .$PROJECT_NAME.$REV.cshrc
+		echo "git checkout master -- infra/environment" >>  .$PROJECT_NAME.$REV.cshrc
+		echo "git checkout master -- infra/scripts" >>  .$PROJECT_NAME.$REV.cshrc
+		echo "cd .." >>  .$PROJECT_NAME.$REV.cshrc
+	endif
+	#-----------------------------------------
+	# Load Tools/Scripts/Envirenment wrappers
+	#-----------------------------------------
+	echo .$PROJECT_NAME.$REV.cshrc
+else
+	set CURR_PWD = `pwd`
+	cp $project_cshrc .$PROJECT_NAME.$REV.$tag_name.cshrc
+	set diff_res = `diff $CURR_PWD/.$PROJECT_NAME.$REV.$tag_name.cshrc .$PROJECT_NAME.$REV.$tag_name.cshrc `
+	if ( "$diff_res" != "") then
+		echo "cp $CURR_PWD/.$PROJECT_NAME.$REV.$tag_name.cshrc ." >>  .$PROJECT_NAME.$REV.$tag_name.cshrc 
+	endif
+	#---------------------------------------
+	# checkout tag wrappers if not -local option 
+	#---------------
+	if ($local != "local") then
+		echo "rm -fr .$PROJECT_NAME.$REV.$tag_name.wrappers" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc 	
+		echo "mkdir .$PROJECT_NAME.$REV.$tag_name.wrappers" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc 	
+		echo "git clone --no-checkout file://$GIT_CAD_REPO/.git .$PROJECT_NAME.$REV.$tag_name.wrappers" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc 
+		echo "cd .$PROJECT_NAME.$REV.$tag_name.wrappers" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc
+		echo "git checkout $tag_name -- infra/tools" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc
+		echo "git checkout $tag_name -- infra/environment" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc
+		echo "git checkout $tag_name -- infra/scripts" >>  .$PROJECT_NAME.$REV.$tag_name.cshrc
+		echo "cd .." >>  .$PROJECT_NAME.$REV.$tag_name.cshrc
+	endif
+	#-----------------------------------------
+	# Load Tools/Scripts/Envirenment tag wrappers
+	#-----------------------------------------
+	echo .$PROJECT_NAME.$REV.$tag_name.cshrc
+endif
+END_SET:
+
+

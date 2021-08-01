@@ -1,0 +1,13 @@
+#***********************************************************
+# scripts setupt wrapper for project everest rev_c project
+#***********************************************************
+# Script    Svn Revision    SVN place
+#-----------------------------------------------------------
+run_lint                  594           http://svc02/svn/infra/trunk/utils/common/scripts/lint/run_lint.pl  
+run_cdc                   594           http://svc02/svn/infra/trunk/utils/common/scripts/lint/run_lint.pl  
+runtest.pl                6274          http://svc02/svn/everest_rev_c/trunk/scripts/runtest.pl 
+runtest.csh               5857          http://svc02/svn/everest_rev_c/trunk/scripts/runtest.csh  
+regression_run.csh        6112          http://svc02/svn/everest_rev_c/trunk/scripts/regression_run.csh
+make_all_compilations.pl  5862          http://svc02/svn/everest_rev_c/trunk/scripts/make_all_compilations.pl
+flow_filelist_set.pm      3377          http://svc02/svn/everest_rev_c/trunk/scripts/flow_filelist_set.pm
+

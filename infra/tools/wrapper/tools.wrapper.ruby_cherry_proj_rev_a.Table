@@ -1,0 +1,12 @@
+#***********************************************
+# Tools setup version for rev_a project
+#***********************************************
+# Team		Module		Tool 		Version
+#-----------------------------------------------------------------------------
+all		load		VCS	        VCS/P-2019.06-SP2-1	
+all		load		VERDI	    VERDI/P-2019.06-SP2-1
+all		load		SPYGLASS	SPYGLASS/M-2017.03-SP2-2
+all		load		FM	        FM/O-2018.06-SP4
+all     load        DC          DC/Q-2019.12-SP4
+all		load		TESSENT	    TESSENT/2020.4
+

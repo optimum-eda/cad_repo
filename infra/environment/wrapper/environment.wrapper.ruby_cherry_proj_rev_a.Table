@@ -1,0 +1,26 @@
+#***********************************************************
+# environment setup wrapper for project everest rev_c 
+#***********************************************************
+# Env-Variable	Name			Value
+#-----------------------------------------------------------
+setenv          ECC_PATH                /project/everest/rev_c/deliveries/snps/eccgen/ecc_v06/compout/views 
+setenv          MEMORIES_PATH           /project/everest/rev_c/deliveries/invecas/memgen/mem_v02/GENVIEW/InvecasViews
+setenv          MASIS_PATH              $MEMORIES_PATH/../../../../masis/current/model/test/masis/modified
+setenv          PM_PATH                 /project/tech_libs/fdx22/PMON/IN22FDX_PMON_FDK_RELV02R02/IN22FDX_PMON_0100 
+setenv          EFUSE_128x32            /project/everest/rev_c/deliveries/gf/efuse/GF22fdx_efuse128x32_SR1_2019q1v1
+setenv          EFUSE_32x4              /project/everest/rev_c/deliveries/gf/efuse/GF22fdx_efuse32x4_2018q4v1
+setenv          EFUSE_32x8              /project/everest/rev_c/deliveries/gf/efuse/GF22fdx_efuse32x8_2018q4v1
+setenv          FLOW_FILELIST_SET       /home/$USER/.everest_rev_c/scripts/flow_filelist_set.pm
+setenv          GPIO18                  /project/tech_libs/fdx22/GPIO18/IN22FDX_GPIO18_10M3S30P_RELV02R02SZ
+setenv          LVDS                    /project/tech_libs/fdx22/LVDS/IN22FDX_LVDS18_10M3S50P_RELV01R33SZ
+setenv          STDLIB_PATH             /space/tech_libs/fdx22/rel_03/foundation_ip/STDLIB
+setenv          LVD_PATH                /project/tech_libs/fdx22/LVD/IN22FDX_POR_LVD_LVD_REMOTE_TOP_FDK_ARBV01R00
+setenv          POR_PATH                /project/tech_libs/fdx22/POR/IN22FDX_POR_LVD_POR_CORE_TOP_FDK_ARBV01R00
+setenv          TS_PATH                 /project/tech_libs/fdx22/TS/IN22FDX_TSBJT_6M10S_FDK_RELV01R03
+setenv          CLKMULT_PATH            /project/everest/rev_c/deliveries/nanozeta/clkmult_210719
+setenv          DPLL_PATH               /project/tech_libs/fdx22/PLL320/IN22FDX_PLL320_8M16S_8M17S_FDK_RELV02R01_P1SZ
+setenv          LPDDR_PHY_PATH          /project/tech_libs/fdx22/LPDDR34PHY/IN22FDX_LPDDR34PHY_10M3S_ARB_FDK_RELV02R03SZ
+setenv          ADC_PATH                /project/everest/rev_c/deliveries/analog_value/dual_adc_210707/verilog       
+source                                  /project/everest/rev_c/env/aliases
+setenv          SNPS_SIM_DEFAULT_GUI    DVE
+

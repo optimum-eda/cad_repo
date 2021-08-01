@@ -1,0 +1,49 @@
+#%Module1.0#####################################################################
+##
+## module-info modulefile
+##
+## DC/Q-2019.12-SP4
+##
+proc ModulesHelp { } {
+    global dotversion
+
+    puts stderr "\tQ-2019.12-SP4"
+}
+
+module-whatis "DC/Q-2019.12-SP4 (dc_shell)"
+conflict DC
+#-------------------------------------
+#
+# Synopsys environment variables
+# Vendor License Server Def
+#
+#------------
+setenv SNPSLMD_LICENSE_FILE "27000@svc03:27000@arbe-svc057"
+if {[info exists env(LM_LICENSE_FILE)]} {
+        prepend-path LM_LICENSE_FILE "$env(SNPSLMD_LICENSE_FILE)"
+} else {
+        setenv LM_LICENSE_FILE $env(SNPSLMD_LICENSE_FILE)
+}
+setenv SNPSHOME "/tools/snps"
+setenv SNPSPATH ""
+setenv SYNOPSYS_SYSTYPE LINUX.64
+#
+#
+#------------------------------------
+#
+# DC environment variables
+#
+#------------
+
+setenv SYN_HOME "$env(SNPSHOME)/syn/Q-2019.12-SP4"
+setenv SNPSPATH "$env(SYN_HOME)/bin"
+prepend-path PATH "$env(SYN_HOME)/bin"
+if {[info exists env(LD_LIBRARY_PATH)]} {
+        prepend-path LD_LIBRARY_PATH "$env(SYN_HOME)/lib/linux64"
+} else {
+        setenv LD_LIBRARY_PATH "$env(SYN_HOME)/lib/linux64"
+}
+setenv HTML_READER firefox
+#
+#---------------------E N D------------------------
+

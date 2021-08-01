@@ -1,0 +1,52 @@
+#%Module1.0#####################################################################
+##
+## module-info modulefile
+##
+## VCS/P-2019.06-SP2-1
+##
+proc ModulesHelp { } {
+    global dotversion
+
+    puts stderr "\tP-2019.06-SP2-5"
+}
+
+module-whatis "VCS/P-2019.06-SP2-5 (vcs)"
+conflict VCS
+#-------------------------------------
+#
+# Synopsys environment variables
+# Vendor License Server Def
+#
+#------------
+setenv SNPSLMD_LICENSE_FILE "27000@svc03:27000@arbe-svc057"
+if {[info exists env(LM_LICENSE_FILE)]} {
+        prepend-path LM_LICENSE_FILE "$env(SNPSLMD_LICENSE_FILE)"
+} else {
+        setenv LM_LICENSE_FILE $env(SNPSLMD_LICENSE_FILE)
+}
+setenv SNPSHOME "/tools/snps"
+setenv SNPSPATH ""
+setenv SYNOPSYS_SYSTYPE LINUX.64
+#
+#------------------------------------
+#
+# VCS environment variables
+#
+#------------
+
+setenv VCS_HOME "$env(SNPSHOME)/vcs/P-2019.06-SP2-5"
+setenv UVM_HOME "$env(VCS_HOME)/etc/uvm-1.2/"
+#prepend-path SNPSPATH "$env(VCS_HOME)/bin:$env(VCS_HOME)/linux64/bin"
+setenv SNPSPATH "$env(VCS_HOME)/bin:$env(VCS_HOME)/linux64/bin"
+prepend-path PATH "$env(VCS_HOME)/bin:$env(VCS_HOME)/linux64/bin"
+if {[info exists env(LD_LIBRARY_PATH)]} {
+        prepend-path LD_LIBRARY_PATH "$env(VCS_HOME)/linux64/lib"
+} else {
+        setenv LD_LIBRARY_PATH "$env(VCS_HOME)/linux64/lib"
+}
+setenv HTML_READER firefox
+setenv VCS_ARCH_OVERRIDE linux
+setenv VCS_COM "$env(VCS_HOME)/linux64/bin/vcs1"
+#
+#---------------------E N D------------------------
+
