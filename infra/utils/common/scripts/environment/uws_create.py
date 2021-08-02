@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(description="Description: Create GIT user work 
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('-wa',default='',help = "work area name",required=True)
 parser.add_argument('-debug',action='store_true')
-requiredNamed.add_argument('-b',default='',help = "block name",required=True)
+requiredNamed.add_argument('-b',default='latest',help = "block name",required=True)
 parser.add_argument('-ver',default='',help = "block version")
 args = parser.parse_args()
 
@@ -48,8 +48,6 @@ args = parser.parse_args()
 script_version = "V000001.0"
 home_dir = flow_utils.concat_workdir_path(os.getcwd() ,  args.wa)
 flow_utils.home_dir = home_dir
-
-
 #=============================================
 #
 #=============================================
@@ -82,7 +80,6 @@ def fn_check_args():
 
     flow_utils.debug("Finish fn_check_args")
 
-
 #------------------------------------
 # proc        : fn_ignore_pull_merge
 # description :
@@ -107,23 +104,17 @@ def fn_ignore_pull_merge ():
 def fn_create_user_workspace ():
 
     global filelog_name
+    global home_dir
+
     flow_utils.debug("Start fn_create_user_workspace")
 
-    UWA_PROJECT_ROOT         = os.getcwd()
-    GIT_OT_PROJECT_ROOT      = os.getenv('GIT_OT_PROJECT_ROOT')
-    GITLAB_OT_PROJECT_ROOT      = os.getenv('GITLAB_OT_PROJECT_ROOT')
-    GIT_FOUNDRY_PROJECT_ROOT = os.getenv('GIT_FOUNDRY_PROJECT_ROOT')
-    GITLAB_FOUNDRY_PROJECT_ROOT = os.getenv('GITLAB_FOUNDRY_PROJECT_ROOT')
-    GIT_TOP_PROJECT_ROOT     = os.getenv('GIT_TOP_PROJECT_ROOT')
-    GIT_CAD_REPO             = os.getenv('GIT_CAD_REPO')
-    GIT_WA_SHAS_PROJECT_ROOT = os.getenv('GIT_WA_SHAS_PROJECT_ROOT')
-    GIT_DESIGN_PROJECT_ROOT  = os.getenv('GIT_DESIGN_PROJECT_ROOT')
-    GIT_VERIFICATION_PROJECT_ROOT = os.getenv('GIT_VERIFICATION_PROJECT_ROOT')
-
-    ot_folder_name      = "opentitan"
+    UWA_PROJECT_ROOT   = os.getcwd()
+    GIT_CAD_REPO       = os.getenv('GIT_CAD_REPO')
+    GIT_PROJECT_ROOT   = os.getenv('GIT_PROJECT_ROOT')
 
     home_dir = UWA_PROJECT_ROOT + '/' + args.wa
 
+    # check work area already exist
     if path.isdir(UWA_PROJECT_ROOT + '/' + args.wa):
         flow_utils.critical("work area '" + UWA_PROJECT_ROOT + '/' + args.wa + "' already exist ....")
         sys.exit(1)
@@ -142,224 +133,10 @@ def fn_create_user_workspace ():
     flow_utils.info("+======================================+")
 
     #-----------------------------------
-    # clone --- opentitan -- git repo
-    #
-    cmd = 'git clone ' +  GITLAB_OT_PROJECT_ROOT + ' ' + ot_folder_name
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-            revert_and_exit()
-
-    ### check that it exists
-    if not(os.path.isdir(ot_folder_name)):
-        flow_utils.error("Work area was not created")
-
-    # set user.otemail
-    os.chdir(ot_folder_name)
-    cmd = 'git remote add upstream ' + GIT_OT_PROJECT_ROOT
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-            revert_and_exit()
-
-    #cmd = 'git pull upstream master --allow-unrelated-histories'
-    #flow_utils.info("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-
-    #cmd = 'git pull upstream master --tags'
-    #flow_utils.info("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-
-    #cmd = 'cp git_hooks/pre-push .git/hooks/.'
-    #flow_utils.info("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-
-    cmd = 'git config user.email `git config --get user.otemail`'
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd,True)):
-            revert_and_exit()
-    os.chdir(home_dir)
-
-    #-----------------------------------------------
-    # clone --- Foundry --- git repo
-    #
-    foundry_path = flow_utils.get_path_to("foundry")
-    if not(path.isdir(foundry_path)):
-        cmd = 'git clone ' +  GITLAB_FOUNDRY_PROJECT_ROOT + ' ' + foundry_path
-        flow_utils.info("run command : " + cmd)
-        if not (flow_utils.git_cmd(cmd)):
-               revert_and_exit()
-
-        ### check that it exists
-        if not(os.path.isdir(foundry_path)):
-            flow_utils.critical("Work area was not created")
-            revert_and_exit()
-
-        # set user.otemail
-        os.chdir(foundry_path)
-        cmd = 'git remote add upstream ' + GIT_FOUNDRY_PROJECT_ROOT
-        flow_utils.info("run command : " + cmd)
-        if not (flow_utils.git_cmd(cmd)):
-               revert_and_exit()
-
-        #cmd = 'git pull upstream master --allow-unrelated-histories'
-        #flow_utils.info("run command : " + cmd)
-        #flow_utils.git_cmd(cmd)
-
-        #cmd = 'git pull upstream master --tags'
-        #flow_utils.info("run command : " + cmd)
-        #flow_utils.git_cmd(cmd)
-
-        #cmd = 'cp git_hooks/pre-push .git/hooks/.'
-        #flow_utils.info("run command : " + cmd)
-        #flow_utils.git_cmd(cmd)
-
-        #cmd = 'git config user.email `git config --get user.otemail`'
-        #flow_utils.info("run command : " + cmd)
-        #if not (flow_utils.git_cmd(cmd)):
-        #       revert_and_exit()
-        #os.chdir(home_dir)
-    else:
-        flow_utils.critical("folder already exist " + foundry_path )
-        sys.exit(1)
-
-    #-----------------------------------------------
-    # clone --- Nuvoton --- git repo
+    # clone --- block -- git repo
     #
     os.chdir(home_dir)
-    if not(os.path.isdir("nuvoton")):
-        os.mkdir("nuvoton", 0o755 );
-
-    nuvoton_path = flow_utils.get_path_to("top")
-    if ("-freeze" in sys.argv):
-        top_branch_name = sys.argv[sys.argv.index("-freeze")+1]
-        if ("-freeze" in  sys.argv and top_branch_name.startswith("imp_") ):   # it means that the user insert -freeze with top branch name
-                os.chdir("nuvoton")
-                os.mkdir("top", 0o755 )
-                os.chdir(("top"))
-                cmd = "git init"
-                flow_utils.git_cmd(cmd)
-                cmd = "git remote add origin " + GIT_TOP_PROJECT_ROOT
-                flow_utils.git_cmd(cmd)
-                file_content = "\"/*\n" # create content .git/info/sparse-checkout file
-                not_include_string = os.popen(top_tools_result_ymal_reader).read()
-                not_include_list = list(not_include_string.split())
-                for elem in not_include_list:
-                    file_content += "!"+elem + "\n" # here we add the NOT included folders
-
-                if ("-top_res" in sys.argv):
-                        included_res_folder_string =  sys.argv[sys.argv.index("-top_res")+1]
-                        included_res_folder_string = included_res_folder_string.replace(", ", ",")
-                        included_res_folder_list = list(included_res_folder_string.split(","))
-                        for folder in included_res_folder_list:
-                            # here we add the included folders
-                            file_content += folder + "\n"
-                            if folder.endswith("/"):
-                               file_content += folder + "*\n"
-                            else:
-                                  file_content += folder + "/*\n"
-
-                file_content += "\"" #end content of file
-                #print(file_content)
-                cmd = "git config core.sparseCheckout true"
-                flow_utils.git_cmd(cmd)
-                if not (os.path.isfile('.git/info/sparse-checkout')):
-                        cmd = "echo -e "+file_content+" > .git/info/sparse-checkout"
-                else:
-                        cmd = "echo -e "+file_content+" >> .git/info/sparse-checkout"
-                flow_utils.git_cmd(cmd)
-                flow_utils.git_cmd("git fetch --all")
-                flow_utils.git_cmd("git fetch --tags")
-                flow_utils.git_cmd("git pull origin " + top_branch_name)
-        else:
-                os.chdir(home_dir)
-                nuvoton_path = flow_utils.get_path_to("top")
-                cmd = 'git clone ' +  GIT_TOP_PROJECT_ROOT + ' ' + nuvoton_path
-                flow_utils.info("run command : " + cmd)
-                if not (flow_utils.git_cmd(cmd)):
-                   revert_and_exit()
-    else:
-        os.chdir(home_dir)
-        nuvoton_path = flow_utils.get_path_to("top")
-        cmd = 'git clone ' +  GIT_TOP_PROJECT_ROOT + ' ' + nuvoton_path
-        flow_utils.info("run command : " + cmd)
-        if not (flow_utils.git_cmd(cmd)):
-           revert_and_exit()
-
-    ### check that it exists
-    os.chdir(home_dir)
-    if not(os.path.isdir(nuvoton_path)):
-       flow_utils.critical("Work area was not created")
-       revert_and_exit()
-
-    os.chdir(nuvoton_path)
-    fn_ignore_pull_merge()
-
-    #flow_utils.update_nuvoton_gitignore(home_dir)
-    #-----------------------------------------------
-    # clone --- Nuvoton design --- git repo
-    #
-    os.chdir(home_dir)
-    nuvoton_design_path = flow_utils.get_path_to("des")
-    cmd = 'git clone ' +  GIT_DESIGN_PROJECT_ROOT + ' ' + nuvoton_design_path
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-           revert_and_exit()
-
-    ### check that it exists
-    if not(os.path.isdir(nuvoton_design_path)):
-        flow_utils.critical("Work area was not created")
-        revert_and_exit()
-
-    os.chdir(nuvoton_design_path)
-    fn_ignore_pull_merge()
-    #-----------------------------------------------
-    # clone --- Nuvoton verification --- git repo
-    #
-    os.chdir(home_dir)
-    nuvoton_verification_path = flow_utils.get_path_to("dv")
-    cmd = 'git clone ' +  GIT_VERIFICATION_PROJECT_ROOT + ' ' + nuvoton_verification_path
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-           revert_and_exit()
-
-    ### check that it exists
-    if not(os.path.isdir(nuvoton_verification_path)):
-        flow_utils.critical("Work area was not created")
-        revert_and_exit()
-
-    os.chdir(nuvoton_verification_path)
-    fn_ignore_pull_merge()
-    #-----------------------------------------------
-    # clone --- cad --- git repo
-    #
-    os.chdir(home_dir)
-    cad_path = flow_utils.get_path_to("cad")
-    cmd = 'git clone --no-checkout ' +  GIT_CAD_REPO + ' ' + cad_path
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-           revert_and_exit()
-
-    ### check that it exists
-    if not (os.path.isdir(cad_path)):
-        flow_utils.critical("Work area was not created")
-        revert_and_exit()
-    # -----------------------------------------------
-    # clone --- wa_shas --- git repo
-    #
-    os.chdir(home_dir)
-    wa_shas_path = flow_utils.get_path_to("wa_shas")
-    cmd = 'git clone ' + GIT_WA_SHAS_PROJECT_ROOT + ' ' + wa_shas_path
-    flow_utils.info("run command : " + cmd)
-    if not (flow_utils.git_cmd(cmd)):
-           revert_and_exit()
-
-    ### check that it exists
-    if not (os.path.isdir(wa_shas_path)):
-        flow_utils.critical("Work area was not created")
-        revert_and_exit()
-
-    os.chdir(wa_shas_path)
-    fn_ignore_pull_merge()
-    os.chdir(home_dir)
+    flow_utils.clone_block(args.b,args.ver,filelog_name)
 
     flow_utils.debug("Finish fn_create_user_workspace")
 
@@ -560,7 +337,7 @@ def main ():
 
     #-----------------------
     # create user work area
-    #fn_create_user_workspace()
+    fn_create_user_workspace()
 
     #-----------------------
     # sync to relevant sha's
