@@ -128,7 +128,61 @@ def revert_and_exit(filelog_name):
     os.system("rm -rf " + home_dir)
     sys.stdout.flush()
     sys.exit(-1)
+#------------------------------------
+# proc        : build_hier_design_struct
+# description : build hier design data structure
+#
+# inputs      :
+#------------------------------------
+def build_hier_design_struct(block_name,filelog_name,myHierDesignDict,top_block=False):
 
+	home_dir = os.getcwd()
+	if not path.isdir(block_name):
+		error('folder name ' + str(block_name) + ', doesnt exist under work ares :' + block_name)
+	os.chdir(block_name)
+	depends_file = 'info/depends.list'
+	force         = 'none'
+	child_name    = 'none'
+	child_version = 'none'
+	print('YAYA 101')
+	if os.path.isfile(depends_file):
+		print('YAYA 102')
+		with open(depends_file, 'r') as reader:
+			for line in reader:
+				if re.search(r'^#', line):
+					continue
+				print('YAYA 103')
+				line_l = line.split(' ')
+				if (len(line_l) < 2):
+					error('Wrong format line ' + str(line) + ', in depend.list for block :' + block_name)
+				if (len(line_l) == 2):
+					child_name    = line_l[0]
+					child_version = line_l[1]
+				if (len(line_l) == 3):
+					force         = line_l[0]
+					child_name    = line_l[1]
+					child_version = line_l[2]
+				print('YAYA 104 force        	=' + force)
+				print('YAYA 104 child_name   =' + child_name)
+				print('YAYA 104 child_version=' + child_version)
+				if block_name in myHierDesignDict.keys():
+					info("Need to Contradiction !!!! ")
+				else:
+					myHierDesignDict[block_name] = [force, child_name, child_version]
+				os.chdir(home_dir)
+				clone_block(child_name,child_version, filelog_name)
+				myHierDesignDict = build_hier_design_struct(child_name, filelog_name, myHierDesignDict, top_block=False)
+	else:
+		if block_name in myHierDesignDict.keys():
+			info("Need to Contradiction !!!! ")
+		else:
+			myHierDesignDict[block_name] = [force , child_name ,child_version]
+			os.chdir(home_dir)
+			clone_block(child_name, child_version, filelog_name)
+		myHierDesignDict=build_hier_design_struct(child_name,filelog_name,myHierDesignDict,top_block=False)
+
+	os.chdir(home_dir)
+	return myHierDesignDict
 #------------------------------------
 # proc        : get_branch_name
 # description : get current branch name if exist

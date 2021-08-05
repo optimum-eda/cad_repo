@@ -136,174 +136,13 @@ def fn_create_user_workspace ():
     # clone --- block -- git repo
     #
     os.chdir(home_dir)
+    print('YAYA 100')
     flow_utils.clone_block(args.b,args.ver,filelog_name)
-
+    myHierDesignDict = {}
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,filelog_name,myHierDesignDict,top_block=True)
+    for key in myHierDesignDict.keys():
+        print('YAYA value for key: "' + key + '"  value: "' + str(myHierDesignDict[key]) + '"' )
     flow_utils.debug("Finish fn_create_user_workspace")
-
-#------------------------------------
-# proc        : fn_checkout_to_relevant_sha
-# description : sync user work area
-#               to sha's that requested
-#               first from sha_list_to_sync_wa file
-#               and then overwriet with user inputs
-#               args if needed
-#------------------------------------
-def fn_checkout_to_relevant_sha():
-
-    flow_utils.debug("Start fn_checkout_to_relevant_sha")
-    #-----------------------------------
-    # Read the SHA config file that contains
-    # all the foldesr that shoud checkout
-    # followng the SHA in the setup WA file
-    # sha_list_to_sync_wa
-
-    home_dir = UWA_PROJECT_ROOT + '/' + args.wa
-
-    ## first thing we synchronized it according to the flag
-    if (args.freeze == ''):
-        args.freeze = 'latest_stable' # stable latest tag as deafult
-    if (args.freeze != ''):
-        os.chdir(flow_utils.get_git_root("sha_list_to_sync_wa"))
-        ok = flow_utils.switch_refrence("sha_list_to_sync_wa", args.freeze, calling_function="uws_create")
-        if not ok:
-            revert_and_exit()
-        os.chdir(home_dir)
-
-    sha_list_to_sync_wa = flow_utils.get_path_to("sha_list_to_sync_wa")
-
-    if not (os.path.isfile(sha_list_to_sync_wa)):
-        flow_utils.error("No such file \'" + sha_list_to_sync_wa + "\'")
-
-    #take the sha either from args or from sha_list_to_sync_wa
-    target_sha_dict = {}
-    if (args.latest) :
-        sha_list_to_sync_dict = flow_utils.set_all_shas_to_latest(sha_list_to_sync_wa)
-    else:
-        sha_list_to_sync_dict = flow_utils.read_sha_set_file(sha_list_to_sync_wa)
-
-    if (args.ot != ""):
-        target_sha_dict['ot'] = args.ot
-    else:
-        target_sha_dict['ot'] = sha_list_to_sync_dict['ot']
-
-    # now we need to go to each place in the directory and
-    # update the head accordingly and write a current_sha file
-
-    os.chdir(home_dir)
-    ## fisf ot. it the root of the tree
-    ot_path = flow_utils.get_git_root("ot")
-    os.chdir(ot_path)
-    #cmd = 'cp git_hooks/pre-push /tmp/pre-push_ot_' + str(os.getpid())
-    #flow_utils.debug("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-    ok = flow_utils.switch_refrence("ot", target_sha_dict['ot'], calling_function="uws_create")
-    #cmd = 'cp /tmp/pre-push_ot_' + str(os.getpid()) + ' .git/hooks/pre-push'
-    #flow_utils.debug("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-    if not ok:
-        revert_and_exit()
-
-    ## update the foundry
-    os.chdir(home_dir)
-    if (args.foundry != ""):
-        target_sha_dict['foundry'] = args.foundry
-    else:
-        target_sha_dict['foundry'] = sha_list_to_sync_dict['foundry']
-
-    foundry_path = flow_utils.get_git_root("foundry")
-    os.chdir(foundry_path)
-    #cmd = 'cp git_hooks/pre-push /tmp/pre-push_fo_' + str(os.getpid())
-    #flow_utils.debug("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-    ok = flow_utils.switch_refrence("foundry", target_sha_dict['foundry'], calling_function="uws_create")
-    #cmd = 'cp /tmp/pre-push_fo_' + str(os.getpid()) + ' .git/hooks/pre-push'
-    #flow_utils.debug("run command : " + cmd)
-    #flow_utils.git_cmd(cmd)
-    if not ok:
-        revert_and_exit()
-
-    ## update of the nuvoton specific area
-    os.chdir(home_dir)
-
-    if (args.top != ""):
-        target_sha_dict['top'] = args.top
-    else:
-        target_sha_dict['top'] = sha_list_to_sync_dict['top']
-
-    if (args.cad != ""):
-        target_sha_dict['cad'] = args.cad
-    else:
-        target_sha_dict['cad'] = sha_list_to_sync_dict['cad']
-
-    if (args.dv != ""):
-        target_sha_dict['dv'] = args.dv
-    else:
-        target_sha_dict['dv'] = sha_list_to_sync_dict['dv']
-
-    if (args.des != ""):
-        target_sha_dict['des'] = args.des
-    else:
-        target_sha_dict['des'] = sha_list_to_sync_dict['des']
-
-    os.chdir(home_dir)
-    flow_utils.debug("home_dir=" + home_dir)
-    dv_path = flow_utils.get_git_root("dv")
-    os.chdir(dv_path)
-    flow_utils.debug("dv_path=" + dv_path)
-
-    ok = flow_utils.switch_refrence("dv", target_sha_dict['dv'], calling_function="uws_create")
-    if not ok:
-        revert_and_exit()
-
-    design_path = flow_utils.get_git_root("des")
-    os.chdir(home_dir)
-    os.chdir(design_path)
-    ok = flow_utils.switch_refrence("des", target_sha_dict['des'], calling_function="uws_create")
-    if not ok:
-        revert_and_exit()
-
-    ntil_path = flow_utils.get_git_root("top")
-    os.chdir(home_dir)
-    os.chdir(ntil_path)
-    ok = flow_utils.switch_refrence("top", target_sha_dict['top'], calling_function="uws_create")
-    if not ok:
-        revert_and_exit()
-
-    # update cad_repo according correct sha
-    os.chdir(home_dir)
-    cad_path = flow_utils.get_git_root("cad")
-    os.chdir(cad_path)
-    ok = flow_utils.switch_refrence("cad", target_sha_dict['cad'], calling_function="uws_create")
-    if not ok:
-        revert_and_exit()
-
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push ../opentitan/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push ../opentitan/hw/foundry/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push.protect_delete ../nuvoton/top/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-commit.top ../nuvoton/top/.git/hooks/pre-commit'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push.protect_delete ../nuvoton/design/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push.protect_delete ../nuvoton/verification/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-    cmd = 'cp infra/utils/common/scripts/git_hooks/pre-push.protect_delete ../wa_shas/.git/hooks/pre-push'
-    flow_utils.debug("run command : " + cmd)
-    flow_utils.git_cmd(cmd)
-
-    os.chdir(home_dir)
-
-    flow_utils.debug("Finish fn_checkout_to_relevant_sha")
-
 
 #------------------------------------
 # proc        : revert
@@ -338,11 +177,6 @@ def main ():
     #-----------------------
     # create user work area
     fn_create_user_workspace()
-
-    #-----------------------
-    # sync to relevant sha's
-    #fn_checkout_to_relevant_sha()
-
     #-----------------------
     # store command line in logs/uws_commans.log
     local_uws_command_log_file = UWA_PROJECT_ROOT + "/" + args.wa + "/" + global_command_log_file
