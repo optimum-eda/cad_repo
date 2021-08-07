@@ -40,7 +40,7 @@ requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('-wa',default='',help = "work area name",required=True)
 parser.add_argument('-debug',action='store_true')
 requiredNamed.add_argument('-b',default='latest',help = "block name",required=True)
-parser.add_argument('-ver',default='',help = "block version")
+parser.add_argument('-ver',default='main',help = "block version")
 args = parser.parse_args()
 
 
@@ -136,12 +136,11 @@ def fn_create_user_workspace ():
     # clone --- block -- git repo
     #
     os.chdir(home_dir)
-    print('YAYA 100')
     flow_utils.clone_block(args.b,args.ver,filelog_name)
     myHierDesignDict = {}
-    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,filelog_name,myHierDesignDict,top_block=True)
-    for key in myHierDesignDict.keys():
-        print('YAYA value for key: "' + key + '"  value: "' + str(myHierDesignDict[key]) + '"' )
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,top_block=True)
+    flow_utils.print_out_design_hier(myHierDesignDict)
+
     flow_utils.debug("Finish fn_create_user_workspace")
 
 #------------------------------------
