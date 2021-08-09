@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#=====================================================================+
+# =====================================================================+
 #                                                                     |
 # Script : uws_create.py                                              |
 #                                                                     |
@@ -8,10 +8,11 @@
 #                                                                     |
 #                                                                     |
 # Written by: Ruby Cherry EDA  Ltd                                    |
-# Date      : Tue Jul 21 19:05:55 IDT 2020                            |
+# Date      : Mon Aug  9 22:51:18 IDT 2021                            |
 #                                                                     |
-#=====================================================================+
-import getopt, sys, urllib, time, os
+# =====================================================================+
+import sys
+import os
 import os.path
 from os import path
 import logging
