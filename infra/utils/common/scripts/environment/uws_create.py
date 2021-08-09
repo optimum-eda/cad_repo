@@ -43,7 +43,6 @@ requiredNamed.add_argument('-b',default='latest',help = "block name",required=Tr
 parser.add_argument('-ver',default='main',help = "block version")
 args = parser.parse_args()
 
-
 #-------- global var ---------------
 script_version = "V000001.0"
 home_dir = flow_utils.concat_workdir_path(os.getcwd() ,  args.wa)
@@ -99,7 +98,8 @@ def fn_ignore_pull_merge ():
 
 #------------------------------------
 # proc        : fn_create_user_workspace
-# description :
+# description : create user work space
+#               following top block's depends list file
 #------------------------------------
 def fn_create_user_workspace ():
 
@@ -137,10 +137,14 @@ def fn_create_user_workspace ():
     #
     os.chdir(home_dir)
     flow_utils.clone_block(args.b,args.ver,filelog_name)
+    #--------
+    # build hier design struct with all block's child and
+    # their version following depends list file
+    # and create user work area
     myHierDesignDict = {}
     myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,top_block=True)
     flow_utils.print_out_design_hier(myHierDesignDict)
-
+    #--------
     flow_utils.debug("Finish fn_create_user_workspace")
 
 #------------------------------------
@@ -181,7 +185,6 @@ def main ():
     local_uws_command_log_file = UWA_PROJECT_ROOT + "/" + args.wa + "/" + global_command_log_file
     flow_utils.write_command_line_to_log(sys.argv,local_uws_command_log_file)
     #-----------------------
-
     local_log_file = UWA_PROJECT_ROOT + "/" + args.wa + "/" + global_log_file
     if path.isfile(local_log_file):
         flow_utils.info("You can find log file under '" + local_log_file + "'")
@@ -192,8 +195,8 @@ def main ():
     flow_utils.info("+======================================+")
     flow_utils.info("")
     flow_utils.info("")
-    flow_utils.debug("Finish uws_create")
 
+    flow_utils.debug("Finish uws_create")
 #------------------------------------
 # proc        : uws_create usage
 # description :

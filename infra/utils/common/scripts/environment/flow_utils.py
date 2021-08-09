@@ -309,11 +309,8 @@ def print_out_design_hier(myHierDesignDict):
 		child_version  = myHierDesignDict[key][4]
 		print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format(parent_name, parent_version, force, child_name,
 															  child_version))
-	#print('_______________________________________________________________________________________________________________')
 	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|\n".format('___________________', '___________________', '___________________', '___________________',
 													  '___________________'))
-
-
 #------------------------------------
 # proc        : now
 # description :
@@ -374,8 +371,6 @@ def find_in_file(keystr, file_name):
 			if (line.find(keystr) >= 0):
 				return True
 	return False
-
-
 #------------------------------------
 # proc        : git_cmd
 # description : will un a git command
@@ -444,108 +439,6 @@ def get_conflict_list(section):
 	debug("Finish - get_conflict_list")
 	return(retur_list)
 #------------------------------------
-# proc        : switch_refrence
-# description : will go to the corresponding subtree (dv or des)
-#               and checkout the "sha" only on this subtree
-#            it will update the curr_sha file as well
-#------------------------------------
-def switch_refrence(tree_type, sha, calling_function="default_behavior"):
-
-	debug("Start - switch_refrence")
-	#
-	update_master = False
-	ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = ok7 = ok8 = True
-	ok1 = git_cmd("git config advice.detachedHead false")
-	swithch_path = get_forward_path(tree_type)
-	if (sha == 'latest') and (tree_type != "cad"):
-		if (calling_function == "uws_create"):
-			write_current_sha(tree_type, "latest")
-			debug("switch refrence in uws_create for latest on tree " + tree_type + " does nothing - assume clone brings master")
-			return True
-			# update_master = True
-		if (calling_function == "uws_update"):
-			debug("switch refrence in uws_update for latest on tree " + tree_type + " we call \"git checkout master\"")
-			#ok6 = git_cmd("git checkout --force master")
-			ok6 = git_cmd("git checkout --force -B master origin/master")
-			#ok6 = git_cmd("git checkout --force  master origin/master")
-
-			curr_tag = get_head_tag_or_sha()
-			write_current_sha(tree_type, curr_tag)
-			return ok6
-		## this is default behaviour, we search for origing master and do "normal" checkout to it
-	latest_sha = get_latest_origin_master()
-	info('+--------------------------------------+')
-	info('Sync path: \'' + os.getcwd() + '\'')
-	info('     area: \'' + tree_type + '\'' )
-	if (sha == 'latest') :
-		info('     sha : \'' + sha + '\' = \'' + latest_sha + '\'')
-	else:
-		info('     sha : \'' + sha + '\'' )
-	info('+-------------')
-	if (tree_type != "cad"):
-		if (sha == 'latest') :
-			if (calling_function == "uws_create"):
-				update_master = True
-			sha = get_latest_origin_master()
-			debug("switshing \"latest\" to sha:" + sha)
-		if  (swithch_path != "."):
-			ok2 = git_cmd("git reset " + sha + " -- " + swithch_path)
-			ok3 = git_cmd("git checkout " + " -- " + swithch_path)
-			ok4 = git_cmd("git clean -fd " + swithch_path)
-		else:
-			if (sha.startswith("imp_") and tree_type =="top" and "uws_create" in os.path.abspath(sys.argv[0])):
-				#file_content = "\"/*\n!*/results"
-				#if ("-top_res" in sys.argv):
-				#	included_res_folder_string =  sys.argv[sys.argv.index("-top_res")+1]
-				#	included_res_folder_list = list(included_res_folder_string.split(","))
-				#	for folder in included_res_folder_list:
-				#		file_content += "\n"+folder+"/results"
-				#file_content += "\""
-				#git_cmd("git config core.sparseCheckout true")
-				##git_cmd("echo -e \"/*\\n!*/results\" >> .git/info/sparse-checkout")
-				##print(file_content)
-				#git_cmd("echo -e "+file_content+" >> .git/info/sparse-checkout")				
-				write_current_sha(tree_type,sha)
-				ok2 = git_cmd("git checkout " + sha)
-			else:
-				ok2 = git_cmd("git checkout --force " + sha)
-			if not ok2:
-				critical("Can't find tag " + sha + " on " + tree_type)
-
-	else:
-		if (sha == 'latest') :
-			#sha = get_latest_origin_master()
-			sha = "master"
-			debug("switshing \"latest\" to sha:" + sha)
-
-		ok2 = git_cmd("git checkout " + sha + ' -- infra/tools/wrapper')
-		ok3 = git_cmd("git checkout " + sha + ' -- infra/environment/wrapper')
-		ok4 = git_cmd("git checkout " + sha + ' -- infra/scripts/wrapper')
-		ok7 = git_cmd("git checkout " + sha + ' -- infra/utils/common/scripts/tools/')
-		ok8 = git_cmd("git checkout " + sha + ' -- infra/utils/common/scripts/git_hooks/')
-
-
-	# update the current sha in the central location
-	if (tree_type != "sha_list_to_sync_wa"):
-		#git_cuur_sha_file = swithch_path + "/.git_curr_sha"
-		if (len(sha) == 0):
-			error("Noting to write in current sha for section " + tree_type + " " + os.getcwd())
-		write_current_sha(tree_type, sha)
-		#cmd = "echo " + sha + " > " + swithch_path + "/.git_curr_sha"
-		#debug(cmd)
-		#os.system(cmd)
-	if update_master:
-		#ok6 = git_cmd("git checkout master")
-		ok6 = git_cmd("git checkout --force -B master origin/master")
-		#ok6 = git_cmd("git checkout --force master origin/master")
-
-	ok5 = git_cmd("git config advice.detachedHead true")
-
-	debug("Finish - switch_refrence")
-	return ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8
-
-
-#------------------------------------
 # proc        : get_git_status_porcelain_file_status
 # description : will return a nice word for the user 
 #               to explain the code given in "git status --porcelain"
@@ -601,7 +494,6 @@ def get_tags_on_same_sha (tag):
 	os.remove(gitlogall_file_name)
 	os.remove(partallel_tags_file_name)
 	return taglist
-
 #------------------------------------
 # proc        : is_brother_tag
 # description : see if tag1 is on the same sha as tag2
@@ -616,10 +508,6 @@ def is_brother_tag(tag1, tag2):
 		return True
 	else:
 		return False
-
-
-
-
 
 #-----------------------------------------------
 # ---------- End flow_utils.py ----------------- 
