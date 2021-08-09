@@ -14,6 +14,7 @@ import getopt, sys, urllib, time, os , re
 import os.path
 import logging ,datetime
 import subprocess
+import shutil
 import getpass
 from os import path
 
@@ -49,6 +50,30 @@ def system_call(command):
 	p = subprocess.Popen([command], stdout=subprocess.PIPE, shell=True)
 	return p.stdout.read()
 
+#------------------------------------
+# proc        :run_sys_cmd
+# description :
+#------------------------------------
+def run_sys_cmd(cmd):
+
+	debug('Info : run cmd: ' + str(cmd))
+	cmd_l = cmd.split(' ')
+	cmd = []
+	for one_ele in cmd_l:
+		cmd.append(one_ele)
+
+	proc = (subprocess.Popen(cmd, stdout=subprocess.PIPE, universal_newlines=True))
+	outs, errs = proc.communicate()
+
+	if proc.returncode != 0:
+		error('Error: cmd failed , ' + outs + '\n\t' + errs)
+		sys.exit(1)
+
+	# return_code = proc.poll()
+	# print('result: outs "' + str(outs) + '"')
+	# print('result: errs "' + str(errs) + '"')
+
+	return outs
 #------------------------------------
 # proc        : fn_init_logger
 # description :
@@ -279,13 +304,21 @@ def concat_workdir_path (working_dir , wa_path) :
         if (len(wa_path) == 0):
                 return ""
         return os.path.abspath(wa_path)
-        # if (wa_path[0] == '/'):
-        #     return wa_path
-        # if (wa_path[0] == '~'):
-        #     return wa_path
-        # if (working_dir[-1] == '/'):
-        #     return working_dir + wa_path
-        # return working_dir + "/" + wa_path
+#------------------------------------
+# proc        : get_workarea
+# description :
+#------------------------------------
+def get_workarea():
+
+	location = os.getcwd()
+	UWA_PROJECT_ROOT = os.getenv('UWA_PROJECT_ROOT')
+	if UWA_PROJECT_ROOT in location:
+		location = location.replace(UWA_PROJECT_ROOT,'')
+		location_l = location.split('/')
+		if len(location_l) > 1:
+			return location_l[1]
+
+	return 'None'
 
 #------------------------------------
 # proc        : print_out_design_hier

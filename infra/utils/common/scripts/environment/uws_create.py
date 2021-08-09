@@ -125,7 +125,8 @@ def fn_create_user_workspace ():
 
     ## create logging directory only
     #  after we have a work area
-    os.system('mkdir -p logs')
+    #os.system('mkdir -p logs')
+    flow_utils.run_sys_cmd('mkdir -p logs')
     filelog_name = home_dir + '/' + global_log_file
     flow_utils.fn_init_logger(filelog_name)
     flow_utils.info("+======================================+")
