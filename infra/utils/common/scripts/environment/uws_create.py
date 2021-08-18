@@ -3,7 +3,7 @@
 #                                                                     |
 # Script : uws_create.py                                              |
 #                                                                     |
-# Description: this script creates new user work area under the        |
+# Description: this script creates new user work area under the       |
 #  directory specified in the -wa parameter.                          |
 #                                                                     |
 #                                                                     |
@@ -36,11 +36,11 @@ global_log_file = 'logs/uws_create_logfile_' + dateTime + '.log'
 global_command_log_file = 'logs/uws_commands.log'
 
 #-------------- parse args --------
-parser = argparse.ArgumentParser(description="Description: Create GIT user work area <work_area_name>")
+parser = argparse.ArgumentParser(description="Description: Create GIT user work area <work_area_name> following depends.list file")
 requiredNamed = parser.add_argument_group('required named arguments')
 requiredNamed.add_argument('-wa',default='',help = "work area name",required=True)
 parser.add_argument('-debug',action='store_true')
-requiredNamed.add_argument('-b',default='latest',help = "block name",required=True)
+requiredNamed.add_argument('-b',default='',help = "block name",required=True)
 parser.add_argument('-ver',default='main',help = "block version")
 args = parser.parse_args()
 
@@ -144,7 +144,7 @@ def fn_create_user_workspace ():
     # their version following depends list file
     # and create user work area
     myHierDesignDict = {}
-    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,top_block=True)
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,action='build',top_block=True)
     flow_utils.print_out_design_hier(myHierDesignDict)
     #--------
     flow_utils.debug("Finish fn_create_user_workspace")
@@ -208,7 +208,7 @@ def usage():
     print(' -------------------------------------------------------------------------')
     print(' Usage: uws_create -wa <work_area_name> [-help]')
     print(' ')
-    print(' description: create GIT user work area <work_area_name>')
+    print(' description: create GIT user work area <work_area_name> following depends.list file')
     print('              work area should be created under \$UWA_PROJECT_ROOT ')
     print(' ')
     print(' options    :')

@@ -5,18 +5,14 @@
 #                                                                       |
 # Description: this script update an existing  work area                |
 #              for $PROJECT_NAME under $UWA_PROJECT_ROOT                |
-#              workarea will be updated by the following options:       |
-#       1) -wa        <work_area_name>  # work area folder name         |
-#       6) -freeze    <sha/tag/latest>       # sha_list_to_sync_wa file |
-#       7) -latest  this option cannot comes with -freeze option        |  
-#                   this option overwrite on all sha's values that comes|
-#                   from file sha_list_to_sync_wa with value 'latest'   |
-#                   that is the origin/master latest sha.               |#                                                                       |
-#               The script will update the update the work area to      |
-#               the tag/sha sepcified for each section.                 |
+#              workarea will be updated by the following options:                    |
+#       1) -wa   <work_area_name>  # work area folder name                           |
+#       2) -here                   # if run dircetory is under work_area_name folder |
+#                                  # the -wa <work_dir> option is not needed .       |
+#       3) -ver <version_name>
 #                                                                       |
 # Written by: Ruby Cherry EDA  Ltd                                      |
-# Date      : Fri July  2020                                            |
+# Date      : Fri July  2021                                            |
 #                                                                       |
 #=======================================================================+
 import getopt, sys, urllib, time, os
@@ -48,21 +44,15 @@ global_command_log_file = 'logs/uws_commands.log'
 
 #flow_utils.fn_init_logger(filelog_name)
 #-------------- parse args -------- 
-parser = argparse.ArgumentParser(description="Description: Update GIT user work area <work_area_name>." )
+parser = argparse.ArgumentParser(description="Description: Update GIT user work area <work_area_name> following depends.list file." )
 parser.add_argument('-debug',action='store_true')
 requiredNamed = parser.add_argument_group('required named arguments')
 #requiredNamed.add_argument('-wa',default='',help = "work area name",required=True)
 parser.add_argument('-wa',default='',help = "work area name")
+requiredNamed.add_argument('-b',default='',help = "top block name",required=True)
 parser.add_argument('-here',action='store_true',help = "that relates to the current working dir if we are inside")
-parser.add_argument('-freeze',default='',help = "version of the sha_list_to_sync_wa file , default is 'latest_stable' tag ")
-parser.add_argument('-latest',action='store_true',help = "this option cannot comes with -freeze option ,this option overwrite on all sha's values that comes from file sha_list_to_sync_wa with value 'latest' that is the origin/master latest sha ")
-
+parser.add_argument('-ver',default='main',help = "block version")
 args = parser.parse_args()
-
-global update_all
-#we update all if the -all flag is on or we are at -latest or we work on the -freeze
-update_all =  args.latest or (args.freeze != '')
-
 
 #----------- create log file -----------------
 UWA_PROJECT_ROOT = os.getenv('UWA_PROJECT_ROOT')
@@ -74,6 +64,8 @@ if ((args.wa == '') and (args.here)):
          flow_utils.error("You are not exist under work area folder,\n\t -here option avalible only under user work area folder !!!")
      os.chdir(UWA_PROJECT_ROOT)
 
+if args.wa == '':
+    flow_utils.error("You must give input option '-wa <work_area>' or '-here' option if you run under work_area folder ")
 home_dir = flow_utils.concat_workdir_path(os.getcwd() ,  args.wa)
 if not os.path.isdir(home_dir):
     flow_utils.error("Work area \'" + home_dir + "\' does not exists")
@@ -115,8 +107,8 @@ def fn_check_args():
         usage()
         return False
 
-    if (args.latest and args.freeze != ''):
-        flow_utils.critical('The option -latest cannot come together with -freeze option !!!')
+    if (args.b == ''):
+        flow_utils.critical('Tou must give work area name , -b <block_name>')
         usage()
 
     flow_utils.debug("Finish fn_check_args")
@@ -137,7 +129,10 @@ def fn_update_user_workspace ():
     os.chdir(args.wa)
     home_dir = os.getcwd()
     #flow_utils.fetch_all()
-
+    myHierDesignDict = {}
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b, args.ver, filelog_name, myHierDesignDict,
+                                                           action='', top_block=True)
+    flow_utils.print_out_design_hier(myHierDesignDict)
         #    proceed = is_working_area_clean(section, args.force, args.strict)
         #if (proceed):
          #   ok = flow_utils.switch_refrence(section, target_sha_dict[section], calling_function="uws_update")
@@ -212,7 +207,6 @@ def main ():
     curr_pwd = os.getcwd()
 
     fn_update_user_workspace()
-
     # -----------------------
 
     if path.isfile(filelog_name):
@@ -232,17 +226,17 @@ def main ():
 def usage():
 
     print (' -------------------------------------------------------------------------')
-    print (' Usage: uws_update -wa <work_area_name> [-des <version> ] [-dv <version> ] [-top <version> [-help]')
+    print (' Usage: uws_update  -wa <work_area_name> | -here   [-help]')
     print (' ')
-    print (' description: update GIT user work area <work_area_name>')
+    print (' description: update GIT user work area <work_area_name> following depends.list file')
     print ('              work area should exists under \$UWA_PROJECT_ROOT ')
     print (' ')
     print (' options    :')
-    print ('              -wa        <work_area_name>  # work area folder name ')
-    print('              -here                         # that relates to the current working dir if we are inside')
-    print ('             -freeze    <sha/tag/latest>           # sha_list_to_sync_wa file')
-    print ('             -latest                               # this option cannot comes with -freeze option ')
-    print ('              -help      # print this usage')
+    print ('             -wa     <work_area_name>     # work area folder name ')
+    print ('             -b      <top_block_name>     # block name that we want to update following his depens.list file ')
+    print('              -here                        # that relates to the current working dir if we are inside')
+    print ('             -ver    <block_version_name> # top block version ,default is latest ]')
+    print ('             -help                        # print this usage')
     print (' ')
     print (' Script version:' + script_version)
     print (' -------------------------------------------------------------------------')

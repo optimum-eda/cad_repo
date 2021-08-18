@@ -159,7 +159,7 @@ def revert_and_exit(filelog_name):
 #
 # inputs      :
 #------------------------------------
-def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignDict,top_block=False):
+def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignDict,action,top_block=False):
 
 	debug("Start build_hier_design_struct")
 	home_dir = os.getcwd()
@@ -199,16 +199,18 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 				else:
 					myHierDesignDict[block_name] = [parent_name,parent_version,force, child_name, child_version]
 				os.chdir(home_dir)
-				clone_block(child_name,child_version, filelog_name)
-				myHierDesignDict = build_hier_design_struct(child_name,child_version,filelog_name, myHierDesignDict, top_block=False)
+				if action == 'build':
+					clone_block(child_name,child_version, filelog_name)
+				myHierDesignDict = build_hier_design_struct(child_name,child_version,filelog_name, myHierDesignDict,action, top_block=False)
 	else:
 		if block_name in myHierDesignDict.keys():
 			info("Need to Contradiction !!!! ")
 		else:
 			myHierDesignDict[block_name] = [parent_name,parent_version,force , child_name ,child_version]
 			os.chdir(home_dir)
-			clone_block(child_name, child_version, filelog_name)
-		myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,top_block=False)
+			if action == 'build':
+				clone_block(child_name, child_version, filelog_name)
+		myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,action,top_block=False)
 
 	os.chdir(home_dir)
 
@@ -470,6 +472,45 @@ def get_conflict_list(section):
 	#    git_cmd('git stash pop "stash@{0}"')
 
 	debug("Finish - get_conflict_list")
+	return(retur_list)
+#------------------------------------
+# proc        : get_work_in_progress_list
+# description : get a list of files that changed
+#               under a development area (can be des / dv / top)
+#------------------------------------
+def get_work_in_progress_list(area, reverse=False):
+
+	debug("Start - get_work_in_progress_list")
+	retur_list = []
+	full_area_name = area
+	pid = str(os.getpid())
+	comment_file = "/tmp/git_status.tmp." + pid + ".txt"
+
+	git_cmd("git status --porcelain > " + comment_file)
+	with open(comment_file, 'r') as reader:
+		for line in reader:
+			if (line.find(comment_file) >= 0) :
+				## git_status.txt is tivially not under source control and will be removed shortly
+				continue
+			if ((line.find(".gitignore") >= 0) and (area == "ot")):
+				## .gitignore is changed in ot by external users and some old stuff might still be there
+				continue
+			filename = line.split()[1]
+			git_status_code = line.split()[0]
+			if ((filename.find(full_area_name) >= 0) or (full_area_name == "." )):
+				if not reverse:
+					cause = get_git_status_porcelain_file_status(git_status_code)
+					retur_list.append(cause + " " + filename)
+			else:
+				if (reverse):
+					cause = get_git_status_porcelain_file_status(git_status_code)
+					retur_list.append(cause + " " + filename)
+
+	if (os.path.isfile(comment_file)):
+		os.remove(comment_file)
+
+	debug("Finish - get_work_in_progress_list")
+
 	return(retur_list)
 #------------------------------------
 # proc        : get_git_status_porcelain_file_status
