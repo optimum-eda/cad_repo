@@ -130,21 +130,41 @@ def fn_update_user_workspace ():
     os.chdir(args.wa)
     home_dir = os.getcwd()
     #flow_utils.fetch_all()
+
+    myHierDesignDict = {}
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b, args.ver, filelog_name, myHierDesignDict,
+                                                           action='depends_file', top_block=True)
+    # report status before following depends.list file
+    flow_utils.print_out_design_hier(myHierDesignDict)
+
+    for key in myHierDesignDict.keys():
+        parent_name = myHierDesignDict[key][0]
+        parent_version = myHierDesignDict[key][1]
+        force = myHierDesignDict[key][2]
+        child_name = myHierDesignDict[key][3]
+        child_version = myHierDesignDict[key][4]
+        if child_name == 'none':
+            continue
+
+        if not os.path.isdir(child_name):
+            flow_utils.error('No such block directory : "' + child_name + '"')
+
+        os.chdir(child_name)
+        proceed = is_working_area_clean(child_name, False, False)
+        if (proceed):
+            ok = flow_utils.switch_refrence(child_name, child_version, calling_function="uws_update")
+            if not ok:
+                revert_and_exit()
+        else:
+            flow_utils.critical("Could not update " + child_name + " untill work area is clean")
+            revert_and_exit()
+
+        os.chdir(home_dir)
+
     myHierDesignDict = {}
     myHierDesignDict = flow_utils.build_hier_design_struct(args.b, args.ver, filelog_name, myHierDesignDict,
                                                            action='report', top_block=True)
     flow_utils.print_out_design_hier(myHierDesignDict)
-        #    proceed = is_working_area_clean(section, args.force, args.strict)
-        #if (proceed):
-         #   ok = flow_utils.switch_refrence(section, target_sha_dict[section], calling_function="uws_update")
-         #   if not ok:
-         #       revert_and_exit()
-        #else:
-         #   flow_utils.critical("Could not update " + section + " untill work area is clean")
-         #   revert_and_exit()
-        #os.chdir(home_dir)
-
-
     os.chdir(home_dir)
             
     flow_utils.debug("Finish fn_update_user_workspace")

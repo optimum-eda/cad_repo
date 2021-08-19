@@ -7,7 +7,7 @@
 #              directory specified in the -wa parameter for input block name  |
 #              -b <block_name> , the work area create following depends.list  |
 #              file that belong to top block ,and build the area with all his |
-#              hierarchy block childes                                        |
+#              hierarchy block child
 #                                                                             |
 #                                                                             |
 # Written by: Ruby Cherry EDA  Ltd                                            |

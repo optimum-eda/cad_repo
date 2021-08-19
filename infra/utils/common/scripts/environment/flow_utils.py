@@ -195,20 +195,30 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 				if block_name in myHierDesignDict.keys():
 					info("Need to Contradiction !!!! ")
 				else:
-					myHierDesignDict[block_name] = [parent_name,parent_version,force, child_name, child_version]
-				os.chdir(home_dir)
-				if action == 'build':
-					clone_block(child_name,child_version, filelog_name)
+					os.chdir(home_dir)
+					if action == 'build':
+						clone_block(child_name,child_version, filelog_name)
+					if action == 'report':
+						os.chdir(child_name)
+						child_version = get_master()
+						os.chdir(home_dir)
+					myHierDesignDict[block_name] = [parent_name, parent_version, force, child_name, child_version]
 				myHierDesignDict = build_hier_design_struct(child_name,child_version,filelog_name, myHierDesignDict,action, top_block=False)
 	else:
 		if block_name in myHierDesignDict.keys():
 			info("Need to Contradiction !!!! ")
 		else:
-			myHierDesignDict[block_name] = [parent_name,parent_version,force , child_name ,child_version]
 			os.chdir(home_dir)
 			if action == 'build':
 				clone_block(child_name, child_version, filelog_name)
-		myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,action,top_block=False)
+			if action == 'report':
+				if child_name != 'none':
+					os.chdir(child_name)
+					child_version = get_master()
+					os.chdir(home_dir)
+			myHierDesignDict[block_name] = [parent_name, parent_version, force, child_name, child_version]
+		if child_name != 'none':
+			myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,action,top_block=False)
 
 	os.chdir(home_dir)
 
@@ -284,7 +294,8 @@ def get_master():
 		debug("Start - get_master")
 		pid = str(os.getpid())
 		head_sha_file = "/tmp/head_sha.tmp." + pid + ".txt"
-		cmd = "git rev-parse --short master > " + head_sha_file
+		#cmd = "git rev-parse --short master > " + head_sha_file
+		cmd = "git rev-parse --short HEAD > " + head_sha_file
 		git_cmd(cmd)
 		#head_sha = system_call(cmd).rstrip("\n")
 		with open(head_sha_file, 'r') as reader:
@@ -292,7 +303,7 @@ def get_master():
 				debug('line :' + line)
 				head_sha = line.split()[0]
 		if (len(head_sha) == 0):
-			error("Can't get master SHA at: " + os.getcwd())
+			error("Can't get HEAD SHA at: " + os.getcwd())
 		os.remove(head_sha_file)
 		debug("Finish get_master")
 		return head_sha
@@ -475,6 +486,92 @@ def get_conflict_list(section):
 
 	debug("Finish - get_conflict_list")
 	return(retur_list)
+
+#------------------------------------
+# proc        : get_latest_origin_master
+# description : get head sha of current work area
+# inputs      :
+#------------------------------------
+def get_latest_origin_master():
+
+		debug("Start - get_latest_origin_master")
+
+		#---- check if branch -------
+		head_branch = get_branch_name()
+		if (head_branch != ""):
+			return head_branch
+		#-----------------------------
+		pid = str(os.getpid())
+		head_sha_file = "/tmp/head_sha.tmp." + pid + ".txt"
+		#cmd = "git rev-parse --short origin/master > " + head_sha_file
+		cmd = "git rev-parse --short origin/main > " + head_sha_file
+		git_cmd(cmd)
+		#head_sha = system_call(cmd).rstrip("\n")
+		with open(head_sha_file, 'r') as reader:
+			for line in reader:
+				debug('line :' + line)
+				head_sha = line.split()[0]
+		if (len(head_sha) == 0):
+			error("Can't get head SHA at: " + os.getcwd())
+		debug("Finish get_latest_origin_master")
+		return head_sha
+
+#------------------------------------
+# proc        : switch_refrence
+# description : will go to the corresponding subtree (dv or des)
+#               and checkout the "sha" only on this subtree
+#            it will update the curr_sha file as well
+#------------------------------------
+def switch_refrence(tree_type, sha, calling_function="default_behavior"):
+
+	debug("Start - switch_refrence")
+	#
+	update_master = False
+	ok1 = ok2 = ok3 = ok4 = ok5 = ok6 = ok7 = ok8 = True
+	ok1 = git_cmd("git config advice.detachedHead false")
+	swithch_path = tree_type
+
+	latest_sha = get_latest_origin_master()
+	info('+--------------------------------------+')
+	info('Sync path: \'' + os.getcwd() + '\'')
+	info('     area: \'' + tree_type + '\'' )
+	if (sha == 'latest') :
+		info('     sha : \'' + sha + '\' = \'' + latest_sha + '\'')
+	else:
+		info('     sha : \'' + sha + '\'' )
+	info('+-------------')
+	if (sha == 'latest') :
+			if (calling_function == "uws_create"):
+				update_master = True
+			sha = get_latest_origin_master()
+			debug("switshing \"latest\" to sha:" + sha)
+	if  (swithch_path != "."):
+			ok2 = git_cmd("git reset " + sha )
+			ok3 = git_cmd("git checkout ")
+			ok4 = git_cmd("git clean -fd ")
+	else:
+			ok2 = git_cmd("git checkout --force " + sha)
+			if not ok2:
+				critical("Can't find tag " + sha + " on " + tree_type)
+
+	# update the current sha in the central location
+	if (tree_type != "sha_list_to_sync_wa"):
+		#git_cuur_sha_file = swithch_path + "/.git_curr_sha"
+		if (len(sha) == 0):
+			error("Noting to write in current sha for section " + tree_type + " " + os.getcwd())
+
+		#cmd = "echo " + sha + " > " + swithch_path + "/.git_curr_sha"
+		#debug(cmd)
+		#os.system(cmd)
+	if update_master:
+		#ok6 = git_cmd("git checkout master")
+		ok6 = git_cmd("git checkout --force -B master origin/master")
+		#ok6 = git_cmd("git checkout --force master origin/master")
+
+	ok5 = git_cmd("git config advice.detachedHead true")
+
+	debug("Finish - switch_refrence")
+	return ok1 and ok2 and ok3 and ok4 and ok5 and ok6 and ok7 and ok8
 #------------------------------------------------------------------------------
 # proc        : get_work_in_progress_list
 # description : get a list of files that changed
