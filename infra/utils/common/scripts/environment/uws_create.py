@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-# =====================================================================+
-#                                                                     |
-# Script : uws_create.py                                              |
-#                                                                     |
-# Description: this script creates new user work area under the       |
-#  directory specified in the -wa parameter.                          |
-#                                                                     |
-#                                                                     |
-# Written by: Ruby Cherry EDA  Ltd                                    |
-# Date      : Mon Aug  9 22:51:18 IDT 2021                            |
-#                                                                     |
-# =====================================================================+
+# ============================================================================+
+#                                                                             |
+# Script : uws_create.py                                                      |
+#                                                                             |
+# Description: this script creates new user work area under the               |
+#              directory specified in the -wa parameter for input block name  |
+#              -b <block_name> , the work area create following depends.list  |
+#              file that belong to top block ,and build the area with all his |
+#              hierarchy block childes                                        |
+#                                                                             |
+#                                                                             |
+# Written by: Ruby Cherry EDA  Ltd                                            |
+# Date      : Mon Aug  9 22:51:18 IDT 2021                                    |
+#                                                                             |
+# ============================================================================+
 import sys
 import os
 import os.path
@@ -25,16 +28,16 @@ from datetime import datetime
 # current date and time
 now = datetime.now()
 dateTime = now.strftime("%d-%m-%Y_%H%M%S")
-
+#------------------------------------------------------------------------------
 #--------- check setup_proj alreay ran -------
 #flow_utils.fn_check_setup_proj_ran()
-
+#------------------------------------------------------------------------------
 #----------- create log file -----------------
 #UWA_PROJECT_ROOT = os.getenv('UWA_PROJECT_ROOT')
 UWA_PROJECT_ROOT = os.getcwd()
 global_log_file = 'logs/uws_create_logfile_' + dateTime + '.log'
 global_command_log_file = 'logs/uws_commands.log'
-
+#------------------------------------------------------------------------------
 #-------------- parse args --------
 parser = argparse.ArgumentParser(description="Description: Create GIT user work area <work_area_name> following depends.list file")
 requiredNamed = parser.add_argument_group('required named arguments')
@@ -43,18 +46,18 @@ parser.add_argument('-debug',action='store_true')
 requiredNamed.add_argument('-b',default='',help = "block name",required=True)
 parser.add_argument('-ver',default='main',help = "block version")
 args = parser.parse_args()
-
+#------------------------------------------------------------------------------
 #-------- global var ---------------
 script_version = "V000001.0"
 home_dir = flow_utils.concat_workdir_path(os.getcwd() ,  args.wa)
 flow_utils.home_dir = home_dir
-#=============================================
+# ============================================================================+
 #
-#=============================================
-#------------------------------------
+# ============================================================================+
+#------------------------------------------------------------------------------
 # proc        : fn_check_args
 # description : check script's inputs args
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_check_args():
 
     if (args.debug):
@@ -80,10 +83,10 @@ def fn_check_args():
 
     flow_utils.debug("Finish fn_check_args")
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : fn_ignore_pull_merge
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_ignore_pull_merge ():
 
     cmd = 'echo "* merge=verify" > .git/info/attributes'
@@ -97,11 +100,11 @@ def fn_ignore_pull_merge ():
     if not (flow_utils.git_cmd(cmd)):
          revert_and_exit()
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : fn_create_user_workspace
 # description : create user work space
 #               following top block's depends list file
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_create_user_workspace ():
 
     global filelog_name
@@ -149,10 +152,10 @@ def fn_create_user_workspace ():
     #--------
     flow_utils.debug("Finish fn_create_user_workspace")
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : revert
 # description : remove the working area in case of error
-#------------------------------------
+#------------------------------------------------------------------------------
 def revert_and_exit():
 
     global filelog_name
@@ -167,10 +170,10 @@ def revert_and_exit():
     sys.stdout.flush()
     sys.exit(-1)
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : main
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def main ():
 
     fn_check_args()
@@ -199,10 +202,10 @@ def main ():
     flow_utils.info("")
 
     flow_utils.debug("Finish uws_create")
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : uws_create usage
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def usage():
 
     print(' -------------------------------------------------------------------------')
@@ -220,8 +223,9 @@ def usage():
     print(' Script version:' + script_version)
     print(' -------------------------------------------------------------------------')
     sys.exit(' ')
-#------------------------------------
-#  ------------- END --------------
-#------------------------------------
+
+#------------------------------------------------------------------------------
+# ---------------------------------- END --------------------------------------
+#------------------------------------------------------------------------------
 if __name__ == "__main__":
     main()

@@ -1,15 +1,17 @@
 #!/usr/bin/env python
-#==============================================================+
-#                                                              |
-# Script : flow_utils.py                                       |
-#                                                              |
-# Description : all central/public procedure written here      |
-#                                                              |
-#                                                              |
-# Written by: Ruby Cherry EDA  Ltd                             |
-# Date      : Tue Jul 21 19:05:55 IDT 2020                     |
-#                                                              |
-#==============================================================+
+
+#=============================================================================+
+#                                                                             |
+# Script : flow_utils.py                                                      |
+#                                                                             |
+# Description : all central/public procedure written here                     |
+#                                                                             |
+#                                                                             |
+# Written by: Ruby Cherry EDA  Ltd                                            |
+# Date      : Tue Jul 21 19:05:55 IDT 2020                                    |
+#                                                                             |
+#=============================================================================+
+#------------------------------------------------------------------------------
 import getopt, sys, urllib, time, os , re
 import os.path
 import logging ,datetime
@@ -17,12 +19,6 @@ import subprocess
 import shutil
 import getpass
 from os import path
-
-#### permissions to change latest_stable tag
-################# who is allwed to change the latest_stabe tag
-global alowed_to_change_latest_stabe_list
-alowed_to_change_latest_stabe_list = {"amird" ,"ezrac"}
-
 
 class bcolors:
 	HEADER = '\033[95m'
@@ -34,6 +30,8 @@ class bcolors:
 	ENDC = '\033[0m'
 	BOLD = '\033[1m'
 	UNDERLINE = '\033[4m'
+
+# ------------------------------------------------------------------------------
 #-------------- logger -----------
 # Gets or creates a logger
 logging.basicConfig()
@@ -41,19 +39,17 @@ logger = logging.getLogger("__")
 global debug_flag 
 debug_flag = False
 global home_dir
-
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        :system_call
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def system_call(command):
 	p = subprocess.Popen([command], stdout=subprocess.PIPE, shell=True)
 	return p.stdout.read()
-
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        :run_sys_cmd
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def run_sys_cmd(cmd):
 
 	debug('Info : run cmd: ' + str(cmd))
@@ -74,10 +70,10 @@ def run_sys_cmd(cmd):
 	# print('result: errs "' + str(errs) + '"')
 
 	return outs
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : fn_init_logger
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_init_logger(filelog_name):
 
 	file_handler = logging.FileHandler(filelog_name)
@@ -87,17 +83,17 @@ def fn_init_logger(filelog_name):
 	# add file handler to logger
 	logger.addHandler(file_handler)
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : fn_close_logger
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_close_logger(filelog_name):
 	logging.shutdown()
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : fn_check_setup_proj_ran
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def fn_check_setup_proj_ran():
 
 	debug("Start fn_check_setup_proj_ran")
@@ -116,14 +112,15 @@ def fn_check_setup_proj_ran():
 
 	debug("Finish fn_check_setup_proj_ran")
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_head_tag_or_sha
 # description : return  tag if exists or the sha if no tag
 # inputs      :
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_head_tag_or_sha():
 
 	debug("Start - get_head_tag_or_sha")
+	# -----------------------------
 	#---- check if branch -------
 	head_branch = get_branch_name()
 	if (head_branch != ""):
@@ -137,10 +134,10 @@ def get_head_tag_or_sha():
 		hed_sha = get_head_sha()
 		debug("head sha =" + hed_sha)
 		return hed_sha
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : revert
 # description : remove the working area in case of error
-#------------------------------------
+#------------------------------------------------------------------------------
 def revert_and_exit(filelog_name):
 
     sys.stdout.write("\033[1;31m")
@@ -153,12 +150,13 @@ def revert_and_exit(filelog_name):
     os.system("rm -rf " + home_dir)
     sys.stdout.flush()
     sys.exit(-1)
-#------------------------------------
+
+#------------------------------------------------------------------------------
 # proc        : build_hier_design_struct
 # description : build hier design data structure
 #
 # inputs      :
-#------------------------------------
+#------------------------------------------------------------------------------
 def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignDict,action,top_block=False):
 
 	debug("Start build_hier_design_struct")
@@ -216,11 +214,12 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 
 	debug("Finish build_hier_design_struct")
 	return myHierDesignDict
-#------------------------------------
+
+#------------------------------------------------------------------------------
 # proc        : get_branch_name
 # description : get current branch name if exist
 # inputs      :
-#------------------------------------
+#------------------------------------------------------------------------------
 def clone_block (block_name,block_version,filelog_name):
 
 	home_dir = os.getcwd()
@@ -242,11 +241,11 @@ def clone_block (block_name,block_version,filelog_name):
 			error('Failed on git checkout ' + str(block_version) + ', on block :' + block_name)
 
 	os.chdir(home_dir)
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_branch_name
 # description : get current branch name if exist
 # inputs      :
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_branch_name():
 
 	debug("Start - get_branch_name")
@@ -275,11 +274,11 @@ def get_branch_name():
 	debug("head_branch = \"" + head_branch + '\"')
 	return head_branch
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_master
 # description : get head sha of current work area
 # inputs      :
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_master():
 
 		debug("Start - get_master")
@@ -297,19 +296,20 @@ def get_master():
 		os.remove(head_sha_file)
 		debug("Finish get_master")
 		return head_sha
-#------------------------------------
+
+#------------------------------------------------------------------------------
 # proc concat_workdir path path : concat two paths (relative or ablolut to find the workdir)
 # description : store script command line
 #               in logs/uws_commands.log
-#------------------------------------
+#------------------------------------------------------------------------------
 def concat_workdir_path (working_dir , wa_path) :
         if (len(wa_path) == 0):
                 return ""
         return os.path.abspath(wa_path)
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_workarea
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_workarea():
 
 	location = os.getcwd()
@@ -322,19 +322,20 @@ def get_workarea():
 
 	return 'None'
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : print_out_design_hier
 # description : print out myHierDesignDict design hier struct
-#------------------------------------
+#------------------------------------------------------------------------------
 def print_out_design_hier(myHierDesignDict):
 
-	print('_______________________________________________________________________________________________________________')
-	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format('', '', '', '',
-															 ''))
+	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('---------------------', '---------------------',
+														'---------------------', '---------------------',
+														'---------------------'))
+
 	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format('Parent_name', 'Parent_version', 'Force', 'Child_name',
 													  'Child_version'))
-	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format('___________________', '___________________', '___________________', '___________________',
-													  '___________________'))
+	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('---------------------', '---------------------', '---------------------', '---------------------',
+													  '---------------------'))
 
 	for key in myHierDesignDict.keys():
 		parent_name    = myHierDesignDict[key][0]
@@ -344,57 +345,57 @@ def print_out_design_hier(myHierDesignDict):
 		child_version  = myHierDesignDict[key][4]
 		print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format(parent_name, parent_version, force, child_name,
 															  child_version))
-	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|\n".format('___________________', '___________________', '___________________', '___________________',
-													  '___________________'))
-#------------------------------------
+	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+\n".format('---------------------', '---------------------', '---------------------', '---------------------',
+													  '---------------------'))
+#------------------------------------------------------------------------------
 # proc        : now
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def now():
 	return str(datetime.datetime.now().strftime("%H:%M:%S"))
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : logging_setLevel
 # description :
-#------------------------------------
+#------------------------------------------------------------------------------
 def logging_setLevel(level):
 	if (level == 'DEBUG'):
 		logger.setLevel(logging.DEBUG)
 	else :
 		logger.setLevel(logging.INFO)
-#--------------------------
+#------------------------------------------------------------------------------
 #------ logger info -------
-#--------------------------
+#------------------------------------------------------------------------------
 def info(msg):
 	logger.info(msg)
 	sys.stdout.flush()
 
-#--------------------------
+#------------------------------------------------------------------------------
 #------ logger debug -------
-#--------------------------
+#------------------------------------------------------------------------------
 def debug(msg):
 	if (debug_flag) :
 		logger.debug(msg)
 		sys.stdout.flush()
 
-#--------------------------
+#------------------------------------------------------------------------------
 #------ logger warning -------
-#--------------------------
+#------------------------------------------------------------------------------
 def warning(msg):
 	logger.warning(msg)
 	sys.stdout.flush()
 
-#--------------------------
+#------------------------------------------------------------------------------
 #------ logger error -------
-#--------------------------
+#------------------------------------------------------------------------------
 def error(msg):
 	logger.error(bcolors.WARNING2 + msg + bcolors.ENDC)
 	sys.stdout.flush()
 	sys.exit(1);
 
-#--------------------------
+#------------------------------------------------------------------------------
 #------ logger critical -------
-#--------------------------
+#------------------------------------------------------------------------------
 def critical(msg):
 	logger.critical(bcolors.WARNING2 + msg + bcolors.ENDC)
 
@@ -406,12 +407,12 @@ def find_in_file(keystr, file_name):
 			if (line.find(keystr) >= 0):
 				return True
 	return False
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : git_cmd
 # description : will un a git command
 #    it will check that the return value is 0 (sucssess) 
 #       if not will pring an error message and exit
-#------------------------------------
+#------------------------------------------------------------------------------
 def git_cmd(cmd, allow_failure=False):
 
 	location = os.getcwd()
@@ -424,11 +425,12 @@ def git_cmd(cmd, allow_failure=False):
 		return False
 	debug("Finish - git_cmd")
 	return True
-#------------------------------------
+
+#------------------------------------------------------------------------------
 # proc        : write_command_line_to_log
 # description : store script command line 
 #               in logs/uws_commands.log 
-#------------------------------------
+#------------------------------------------------------------------------------
 def write_command_line_to_log(input_cmd,local_uws_command_log_file):
 
 	cmd_line = input_cmd[0]
@@ -439,11 +441,11 @@ def write_command_line_to_log(input_cmd,local_uws_command_log_file):
 	cmd = 'echo ' + cmd_line + ' >> ' + local_uws_command_log_file
 	os.system(cmd)
 
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_conflict_list
 # description : get a list of files that 
 #               conflict by "git pull --no-commit origin master"
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_conflict_list(section):
 
 	debug("Start - get_conflict_list")
@@ -473,11 +475,11 @@ def get_conflict_list(section):
 
 	debug("Finish - get_conflict_list")
 	return(retur_list)
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_work_in_progress_list
 # description : get a list of files that changed
 #               under a development area (can be des / dv / top)
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_work_in_progress_list(area, reverse=False):
 
 	debug("Start - get_work_in_progress_list")
@@ -512,11 +514,11 @@ def get_work_in_progress_list(area, reverse=False):
 	debug("Finish - get_work_in_progress_list")
 
 	return(retur_list)
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_git_status_porcelain_file_status
 # description : will return a nice word for the user 
 #               to explain the code given in "git status --porcelain"
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_git_status_porcelain_file_status(porcelain_code):
 
 	debug("Start - get_git_status_porcelain_file_status")
@@ -535,11 +537,12 @@ def get_git_status_porcelain_file_status(porcelain_code):
 		return status_code_dict.get(porcelain_code)
 	else:
 		return "Unknon Staus (" + porcelain_code + ")"
-#------------------------------------
+#------------------------------------------------------------------------------
 # proc        : get_tags_on_same_sha
 # description : get a list of all tags that sit  "parallel" on the same tag with "sha"
-#------------------------------------
+#------------------------------------------------------------------------------
 def get_tags_on_same_sha (tag):
+
 	taglist = []
 	if (tag == ""):
 		return taglist
@@ -568,11 +571,13 @@ def get_tags_on_same_sha (tag):
 	os.remove(gitlogall_file_name)
 	os.remove(partallel_tags_file_name)
 	return taglist
-#------------------------------------
+
+#------------------------------------------------------------------------------
 # proc        : is_brother_tag
 # description : see if tag1 is on the same sha as tag2
-#------------------------------------
+#------------------------------------------------------------------------------
 def is_brother_tag(tag1, tag2):
+
 	if tag1 == tag2:
 		return True
 	if tag1 == "":
@@ -583,6 +588,6 @@ def is_brother_tag(tag1, tag2):
 	else:
 		return False
 
-#-----------------------------------------------
-# ---------- End flow_utils.py ----------------- 
-#-----------------------------------------------
+#------------------------------------------------------------------------------
+# ---------------------------- End flow_utils.py ------------------------------
+#------------------------------------------------------------------------------
