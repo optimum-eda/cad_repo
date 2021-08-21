@@ -157,9 +157,11 @@ def revert_and_exit(filelog_name):
 #
 # inputs      :
 #------------------------------------------------------------------------------
-def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignDict,action,top_block=False):
+def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignDict,action,hier_level,top_block=False):
 
 	debug("Start build_hier_design_struct")
+	if top_block:
+		hier_level = 1
 	home_dir = os.getcwd()
 	if not path.isdir(block_name):
 		error('folder name ' + str(block_name) + ', doesnt exist under work ares :' + block_name)
@@ -187,14 +189,22 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 					child_name    = line_l[1]
 					child_version = line_l[2]
 				debug('----------------------------------------')
+				debug('block_name     =' + block_name)
 				debug('parent_name    =' + parent_name)
 				debug('parent_version =' + parent_version)
 				debug('force          =' + force)
 				debug('child_name     =' + child_name)
 				debug('child_version  =' + child_version)
-				if block_name in myHierDesignDict.keys():
-					info("Need to Contradiction !!!! ")
-				else:
+				debug('hier_level     =' + str(hier_level))
+				debug('----------------------------------------')
+				contradiction_flag = False
+				if (block_name in myHierDesignDict.keys()):
+					for one_child in myHierDesignDict[block_name]:
+						if (one_child[5] != child_version) and (one_child[4] == child_name): # contradiction in child
+							print('YAYA block_name:' + str(block_name) + 'child_version=' + str(child_version) + 'in array child_version=' + str(myHierDesignDict[block_name][5]))
+							info("Need to Contradiction !!!! ")
+							contradiction_flag = True
+				if not contradiction_flag:
 					os.chdir(home_dir)
 					if action == 'build':
 						clone_block(child_name,child_version, filelog_name)
@@ -202,12 +212,28 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 						os.chdir(child_name)
 						child_version = get_master()
 						os.chdir(home_dir)
-					myHierDesignDict[block_name] = [parent_name, parent_version, force, child_name, child_version]
-				myHierDesignDict = build_hier_design_struct(child_name,child_version,filelog_name, myHierDesignDict,action, top_block=False)
+					if not (block_name in myHierDesignDict.keys()):
+						myHierDesignDict[block_name] = []
+					myHierDesignDict[block_name].append([hier_level,parent_name, parent_version, force, child_name, child_version])
+				hier_level+=1
+				myHierDesignDict = build_hier_design_struct(child_name,child_version,filelog_name, myHierDesignDict,action,hier_level, top_block=False)
+				hier_level -= 1
+		if child_name == 'none':
+			if not (block_name in myHierDesignDict.keys()):
+				myHierDesignDict[block_name] = []
+			myHierDesignDict[block_name].append(
+				[hier_level, parent_name, parent_version, force, child_name, child_version])
 	else:
-		if block_name in myHierDesignDict.keys():
-			info("Need to Contradiction !!!! ")
-		else:
+		contradiction_flag = False
+		if (block_name in myHierDesignDict.keys()):
+			for one_child in myHierDesignDict[block_name]:
+				if (one_child[5] != child_version) and (one_child[4] == child_name):  # contradiction in child
+					print('YAYA block_name:' + str(block_name) + 'child_version=' + str(
+						child_version) + 'in array child_version=' + str(myHierDesignDict[block_name][5]))
+					info("Need to Contradiction !!!! ")
+					contradiction_flag = True
+
+		if not contradiction_flag:
 			os.chdir(home_dir)
 			if action == 'build':
 				clone_block(child_name, child_version, filelog_name)
@@ -216,9 +242,14 @@ def build_hier_design_struct(block_name,block_version,filelog_name,myHierDesignD
 					os.chdir(child_name)
 					child_version = get_master()
 					os.chdir(home_dir)
-			myHierDesignDict[block_name] = [parent_name, parent_version, force, child_name, child_version]
-		if child_name != 'none':
-			myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,action,top_block=False)
+			if not (block_name in myHierDesignDict.keys()):
+				myHierDesignDict[block_name] = []
+			myHierDesignDict[block_name].append([hier_level,parent_name, parent_version, force, child_name, child_version])
+
+		#if child_name != 'none':
+		hier_level += 1
+		myHierDesignDict=build_hier_design_struct(child_name,child_version,filelog_name,myHierDesignDict,action,hier_level,top_block=False)
+		hier_level -= 1
 
 	os.chdir(home_dir)
 
@@ -339,24 +370,29 @@ def get_workarea():
 #------------------------------------------------------------------------------
 def print_out_design_hier(myHierDesignDict):
 
-	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('---------------------', '---------------------',
+	print("+{:<6}+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('-------', '---------------------','---------------------',
 														'---------------------', '---------------------',
 														'---------------------'))
 
-	print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format('Parent_name', 'Parent_version', 'Force', 'Child_name',
+	print("| {:<6}| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format('Level','Parent_name', 'Parent_version', 'Force', 'Child_name',
 													  'Child_version'))
-	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('---------------------', '---------------------', '---------------------', '---------------------',
+	print("+{:<6}+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+".format('-------','---------------------', '---------------------', '---------------------', '---------------------',
 													  '---------------------'))
-
-	for key in myHierDesignDict.keys():
-		parent_name    = myHierDesignDict[key][0]
-		parent_version = myHierDesignDict[key][1]
-		force          = myHierDesignDict[key][2]
-		child_name     = myHierDesignDict[key][3]
-		child_version  = myHierDesignDict[key][4]
-		print("| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format(parent_name, parent_version, force, child_name,
+	dict_len = len(myHierDesignDict)
+	dict_len+=1
+	for curr_hier_level in range(1, dict_len):
+		for key in myHierDesignDict.keys():
+			for one_child in myHierDesignDict[key]:
+				hier_level     = one_child[0]
+				if curr_hier_level == hier_level:
+					parent_name    = one_child[1]
+					parent_version = one_child[2]
+					force          = one_child[3]
+					child_name     = one_child[4]
+					child_version  = one_child[5]
+					print("| {:<6}| {:<20}| {:<20}| {:<20}| {:<20}| {:<20}|".format(hier_level,parent_name, parent_version, force, child_name,
 															  child_version))
-	print("+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+\n".format('---------------------', '---------------------', '---------------------', '---------------------',
+	print("+{:<6}+{:<20}+{:<20}+{:<20}+{:<20}+{:<20}+\n".format('-------','---------------------', '---------------------', '---------------------', '---------------------',
 													  '---------------------'))
 #------------------------------------------------------------------------------
 # proc        : now

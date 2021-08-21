@@ -147,7 +147,7 @@ def fn_create_user_workspace ():
     # their version following depends list file
     # and create user work area
     myHierDesignDict = {}
-    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,action='build',top_block=True)
+    myHierDesignDict = flow_utils.build_hier_design_struct(args.b,args.ver,filelog_name,myHierDesignDict,action='build',hier_level=0,top_block=True)
     flow_utils.print_out_design_hier(myHierDesignDict)
     #--------
     flow_utils.debug("Finish fn_create_user_workspace")
