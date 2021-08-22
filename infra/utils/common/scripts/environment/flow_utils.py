@@ -270,10 +270,14 @@ def clone_block (block_name,block_version,filelog_name):
 		sys.exit(1)
 
 	GIT_PROJECT_ROOT = os.getenv('GIT_PROJECT_ROOT')
-	cmd = 'git clone ' + GIT_PROJECT_ROOT + '/' + block_name + '.git' + ' ' + block_name
-	info("run command : " + cmd)
-	if not (git_cmd(cmd)):
-		revert_and_exit(filelog_name)
+	if not os.path.exists(block_name):
+		cmd = 'git clone ' + GIT_PROJECT_ROOT + '/' + block_name + '.git' + ' ' + block_name
+		info("run command : " + cmd)
+		if not (git_cmd(cmd)):
+			revert_and_exit(filelog_name)
+	else:
+		info('tried to run git clone command, but block name folder "' + block_name + '" already exits ')
+
 	if block_version != 'latest':
 		os.chdir(block_name)
 		cmd = 'git checkout ' + str(block_version)
